@@ -27,15 +27,15 @@ const config: HardhatUserConfig = {
   defaultNetwork: "polygon",
   networks: {
     polygon: {
-      url: process.env.POLYGON_URL || "",
+      url: process.env.POLYGON_URL || "http://127.0.0.1/",
       accounts: {
-        mnemonic: process.env.MNEMONIC
+        mnemonic: process.env.MNEMONIC || "test test test test test test test test test test test junk"
       }
     },
     node: {
-      url: process.env.NODE_URL || "",
+      url: process.env.NODE_URL || "https://kovan.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161", // found on google
       accounts: {
-        mnemonic: process.env.MNEMONIC
+        mnemonic: process.env.MNEMONIC || "test test test test test test test test test test test junk"
       }
     }
   },
