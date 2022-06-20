@@ -1,0 +1,36 @@
+name: Run demo task
+
+on:
+  schedule:
+    - cron:  '0 * * * *' # every hour at 0 minutes
+
+
+jobs:
+  build:
+    name: Compile contracts and run action
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [16.x]
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+    steps:
+    - uses: actions/checkout@v3
+    - name: Launch action
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    - run: npm ci
+    - name: Create env file
+      run: |
+        touch .env
+        echo MNEMONIC=${MNEMONIC} >> .env
+        echo POLYGON_URL=${POLYGON_URL} >> .env
+        echo NODE_URL=${NODE_URL} >> .env
+        cat .env
+      env: 
+        MNEMONIC: ${{ secrets.MNEMONIC }} 
+        POLYGON_URL: ${{ secrets.POLYGON_URL }} 
+        NODE_URL: ${{ secrets.NODE_URL }}
+    - run: npx hardhat compile
+    - run: npm rundemo
