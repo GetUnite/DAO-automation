@@ -5,7 +5,7 @@
   "main": "harhdat.config.ts",
   "scripts": {
     "test": "npx hardhat test",
-    "rundemo": "hh run scripts/voteTimerDemo.ts --network node"
+    "rundemo": "npx hardhat run scripts/voteTimerDemo.ts --network node"
   },
   "repository": {
     "type": "git",
