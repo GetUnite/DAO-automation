@@ -34,4 +34,4 @@ jobs:
         POLYGON_URL: ${{ secrets.POLYGON_URL }} 
         NODE_URL: ${{ secrets.NODE_URL }}
     - run: npx hardhat compile
-    - run: npm rundemo
+    - run: npm run rundemo
