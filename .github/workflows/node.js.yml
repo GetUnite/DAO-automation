@@ -1,6 +1,7 @@
 name: Run demo task
 
 on:
+  workflow_dispatch:
   schedule:
     - cron:  '0,30 * * * *' # every hour at 0 minutes
 
