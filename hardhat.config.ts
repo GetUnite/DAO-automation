@@ -38,14 +38,7 @@ const config: HardhatUserConfig = {
         mnemonic: process.env.MNEMONIC || "test test test test test test test test test test test junk"
       }
     }
-  },
-  gasReporter: {
-    enabled: process.env.REPORT_GAS !== undefined,
-    currency: "USD",
-  },
-  etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY,
-  },
+  }
 };
 
 export default config;

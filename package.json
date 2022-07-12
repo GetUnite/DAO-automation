@@ -39,11 +39,11 @@
     "hardhat-gas-reporter": "^1.0.8",
     "solidity-coverage": "^0.7.21",
     "ts-node": "^10.8.1",
+    "twitter-api-v2": "^1.12.2",
     "typechain": "^5.2.0",
     "typescript": "^4.7.3"
   },
   "dependencies": {
-    "@snapshot-labs/snapshot.js": "^0.3.97",
-    "web3": "^1.7.3"
+    "@snapshot-labs/snapshot.js": "^0.3.97"
   }
 }
