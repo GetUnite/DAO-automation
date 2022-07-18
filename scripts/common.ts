@@ -4,6 +4,7 @@ import fs from 'fs';
 import Twitter from "twitter-api-v2";
 
 export const voteExecutorMasterAddress = "0x279c129a1d2f9213c6e326b729d9fe0cd4941a05";
+export const voteExecutorMasterAddressMainnet = "0x4Fd58328C2e0dDa1Ea8f4C70321C91B366582eA2";
 
 export type Times = {
     currentTime: Date,
@@ -89,13 +90,13 @@ export async function getIbAlluosAssets(): Promise<{ asset: string, symbol: stri
     return assets;
 }
 
-export function getApyVoteOptions(voteDate: Date, optionsType: string): number[] {
+export function getVoteOptions(voteDate: Date, optionsType: string, folder: string): any[] {
     const regexFileString = `^\\d{2}-[A-Z][a-z]{2}-\\d{4}_${optionsType}\\.json$`
     const regexSpaces = /\d{2}\s[A-Z][a-z]{2}\s\d{4}/gm;
     const regexFile = new RegExp(regexFileString, "gm");
     const regexDate = /^\d{2}-[A-Z][a-z]{2}-\d{4}/gm;
 
-    const baseDir = `./proposalOptions/${optionsType}`;
+    const baseDir = `./proposalOptions/${folder}`;
     let path = `${baseDir}/${replaceAll(voteDate.toUTCString().match(regexSpaces)![0], " ", "-")}_${optionsType}.json`;
     if (!fs.existsSync(path)) {
         console.warn("Couldn't find file with options for vote stare date at", "'" + path + "',", "searching for latest file...");
@@ -114,18 +115,22 @@ export function getApyVoteOptions(voteDate: Date, optionsType: string): number[]
         console.log("Found file with options for today at", "'" + path + "'");
     }
 
-    const json: number[] = require("." + path);
-    console.log("APY vote options:\n\t" + json.join("\n\t"));
+    const json: any[] = require("." + path);
+    console.log(optionsType, "options:\n\t" + json.join("\n\t"));
     return json;
 }
 
 export function getTimes(voteStartHour: number, voteLengthSeconds: number, voteEffectLengthSeconds: number): Times {
     const currentTime = new Date(Date.now());
     let voteStartTime = new Date(cloneDate(currentTime).setUTCHours(voteStartHour, 0, 0, 0));
-    if (voteStartTime.valueOf() < currentTime.valueOf()) {
-        console.warn(`It is more than ${voteStartHour}:00 GMT right now, starting vote tommorow`);
-        voteStartTime.setDate(1 + voteStartTime.getDate());
+
+    // search for next Wednesday
+    while (voteStartTime.getDay() != 3) {
+        voteStartTime.setUTCDate(
+            voteStartTime.getUTCDate() + 1
+        );
     }
+
     const voteEndTime = new Date(cloneDate(voteStartTime).valueOf() + voteLengthSeconds);
     const voteEffectEndTime = new Date(cloneDate(voteEndTime).valueOf() + voteEffectLengthSeconds);
 

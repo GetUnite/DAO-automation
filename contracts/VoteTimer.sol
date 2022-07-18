@@ -83,18 +83,25 @@ abstract contract Ownable is Context {
 }
 
 contract VoteTimer is Ownable {
-    uint256 public start; //  = 1654646400; // 8 Jun 2022 0:00:00 GMT
-    uint256 public timeSpan; // = 2 weeks;
-    uint256 public executionWindow; // = 1 days;
+    uint256 public start;
+    uint256 public timeSpan;
+    uint256 public executionWindow;
+
+    string public name;
 
     constructor(
         uint256 _start,
         uint256 _timeSpan,
-        uint256 _executionWindow
+        uint256 _executionWindow,
+        string memory _name
     ) {
         start = _start;
         timeSpan = _timeSpan;
         executionWindow = _executionWindow;
+        name = _name;
+
+        // owner is gnosis wallet
+        _transferOwnership(0x2580f9954529853Ca5aC5543cE39E9B5B1145135);
     }
 
     function changeParams(
