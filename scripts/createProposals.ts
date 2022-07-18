@@ -28,7 +28,11 @@ async function createTreasuryVote(
     chainId: number,
 ) {
     const title = `Percentage of treasury invested:  ${UTCStringToRemiString(times.voteEndTime.toUTCString())} to ${UTCStringToRemiString(times.apyEndTime.toUTCString())}`;
-    let body = `yeet :D`
+    let body = `What should be the percentage of the treasury invested in the protocol?
+
+All the yield that is generated from this position will be used to contribute ETH to the ETH-ALLUO Balancer pool.
+
+The more we invest the more we can generate yield and contribute ETH to the pool but it creates a risk to the protocol's treasury.`
 
     let hub = "https://hub.snapshot.org";
     let space = "alluo.eth";
@@ -165,7 +169,11 @@ async function createLDVote(
     chainId: number,
 ) {
     const title = `[${asset}] Liquidity Direction: ${UTCStringToRemiString(times.voteEndTime.toUTCString())} to ${UTCStringToRemiString(times.apyEndTime.toUTCString())}`;
-    let body = `yeet :D`
+    let body = `What should be the APY for the ${asset} pool?
+
+Note that if the spread is positive, the excess yield will be used to buy $ALLUO from the Balancer pool.
+
+If the the spread is negative, the missing yield will need to be financed by the treasury.`
 
     let hub = "https://hub.snapshot.org";
     let space = "alluo.eth";
