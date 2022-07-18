@@ -42,4 +42,4 @@ jobs:
         APY_VOTE_EFFECT_LENGTH_MSECONDS: ${{ secrets.APY_VOTE_EFFECT_LENGTH_MSECONDS }}
         APY_VOTE_END_HOUR: ${{ secrets.APY_VOTE_END_HOUR }}
     - run: npx hardhat compile
-    - run: npm hardhat run scripts/createProposals.ts
+    - run: npx hardhat run scripts/createProposals.ts
