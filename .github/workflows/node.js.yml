@@ -1,4 +1,4 @@
-name: Run demo task
+name: Create votes on Snapshot
 
 on:
   workflow_dispatch:
