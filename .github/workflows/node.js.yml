@@ -2,8 +2,8 @@ name: Run demo task
 
 on:
   workflow_dispatch:
-  # schedule:
-  #  - cron:  '0,30 * * * *' # every hour at 0 minutes
+  #schedule:
+  #  - cron:  '0 9 * * WED' # every hour at 0 minutes
 
 
 jobs:
@@ -28,10 +28,18 @@ jobs:
         echo MNEMONIC=${MNEMONIC} >> .env
         echo POLYGON_URL=${POLYGON_URL} >> .env
         echo NODE_URL=${NODE_URL} >> .env
+        echo APY_VOTE_START_HOUR=${APY_VOTE_START_HOUR} >> .env
+        echo APY_VOTE_LENGTH_MSECONDS=${APY_VOTE_LENGTH_MSECONDS} >> .env
+        echo APY_VOTE_EFFECT_LENGTH_MSECONDS=${APY_VOTE_EFFECT_LENGTH_MSECONDS} >> .env
+        echo APY_VOTE_END_HOUR=${APY_VOTE_END_HOUR} >> .env
         cat .env
       env: 
         MNEMONIC: ${{ secrets.MNEMONIC }} 
         POLYGON_URL: ${{ secrets.POLYGON_URL }} 
         NODE_URL: ${{ secrets.NODE_URL }}
+        APY_VOTE_START_HOUR: ${{ secrets.APY_VOTE_START_HOUR }}
+        APY_VOTE_LENGTH_MSECONDS: ${{ secrets.APY_VOTE_LENGTH_MSECONDS }}
+        APY_VOTE_EFFECT_LENGTH_MSECONDS: ${{ secrets.APY_VOTE_EFFECT_LENGTH_MSECONDS }}
+        APY_VOTE_END_HOUR: ${{ secrets.APY_VOTE_END_HOUR }}
     - run: npx hardhat compile
-    - run: npm run rundemo
+    - run: npm hardhat run scripts/createProposals.ts
