@@ -46,5 +46,17 @@ interface IVoteExecutorMaster {
             bytes memory inputData // final data for subitData()
         );
 
+    function encodeAllCommands(
+        uint256[] memory _commandIndexes,
+        bytes[] memory _commands
+    )
+        external
+        pure
+        returns (
+            bytes32 messagesHash, // to console.log !!!
+            Message[] memory messages,
+            bytes memory inputData // final data for subitData()
+        );
+
     function submitData(bytes memory data) external;
 }

@@ -1,7 +1,7 @@
 import { Contract, Wallet } from "ethers";
 import { ethers } from "hardhat";
 import fetch from 'node-fetch';
-import { voteExecutorMasterAddress } from "./common";
+import { voteExecutorMasterAddressMainnet } from "./common";
 
 type Proposal = {
     id: string,
@@ -31,10 +31,17 @@ type VoteParams = {
     }[]
 };
 
-function extractVoteParamsFromProposalBody(proposal: Proposal): VoteParams {
-    const regex = /```json.*```/gs;
-    const match = proposal.body.match(regex)![0];
-    return JSON.parse(match.substring(8, match.length - 3)) as VoteParams;
+function extractVoteParamsFromProposalBody(proposal: Proposal): VoteParams | null {
+    const regex = /\`\`\`json.*\`\`\`/gs;
+    const match = proposal.body.match(regex);
+    if (match != null) {
+        const res = match![0].substring(8, match![0].length - 3);
+
+        return JSON.parse(res) as VoteParams;
+    }
+    else {
+        return null;
+    }
 }
 
 async function getAllProposals(hub: string, space: string, voteFinishTime: number): Promise<Proposal[]> {
@@ -96,7 +103,6 @@ async function main() {
     if ((new Date().valueOf()) <= (todayFinishTime * 1000)) {
         throw new Error(`It is too early - expecting current time (${new Date().toUTCString()}) to be above ${new Date(todayFinishTime * 1000).toUTCString()}`);
     }
-    todayFinishTime = 1656162000;
     console.log("Searching for all proposals in space", space, "that finished at timestamp", todayFinishTime, "(", new Date(todayFinishTime * 1000).toUTCString(), ")");
 
     const toExecute = await getAllProposals(hub, space, todayFinishTime);
@@ -112,6 +118,13 @@ async function main() {
     for (let i = 0; i < toExecute.length; i++) {
         const proposal = toExecute[i];
         const params = extractVoteParamsFromProposalBody(proposal)
+
+        if (params == null) {
+            console.log("Couldn't JSON in proposal body on proposal id " + proposal.id)
+            console.log("Assuming that it is not executable, skipping...");
+            continue;
+        }
+
         const winningOption = getWinningVoteOption(proposal);
 
         if (winningOption === null) {
@@ -123,7 +136,7 @@ async function main() {
 
         console.log(winningOption);
 
-        const winningParam = params.args.find((x) => x.stringOption == winningOption)!;
+        const winningParam = params!.args.find((x) => x.stringOption == winningOption)!;
         winningParams.push(winningParam);
     }
 
@@ -135,15 +148,15 @@ async function main() {
         let signer = Wallet.fromMnemonic(process.env.MNEMONIC as string);
         signer = new Wallet(signer.privateKey, mainnetProvider);
 
-        const veMasterInterface = await ethers.getContractAt("IVoteExecutorMaster", voteExecutorMasterAddress);
-        const veMaster = new Contract(voteExecutorMasterAddress, veMasterInterface.interface, signer);
+        const veMasterInterface = await ethers.getContractAt("IVoteExecutorMaster", voteExecutorMasterAddressMainnet);
+        const veMaster = new Contract(voteExecutorMasterAddressMainnet, veMasterInterface.interface, signer);
 
         console.log("Tx sender address:", signer.address)
         const cmdEncoded = await veMaster.callStatic.encodeAllMessages(commandIndexes, commands);
 
         console.log("Message hash:", cmdEncoded.messagesHash);
         console.log("Trying to broadcast tx...");
-        const tx = await veMaster/*.connect(signer)*/.submitData(cmdEncoded.inputData);
+        const tx = await veMaster.submitData(cmdEncoded.inputData);
 
         console.log("Tx is broadcasted on chainId", (await ethers.provider.getNetwork()).chainId, "txHash:", tx.hash);
         console.log("Waiting for tx confirmation...");
