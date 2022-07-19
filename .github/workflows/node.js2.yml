@@ -1,4 +1,4 @@
-name: Create votes on Snapshot
+name: Execute votes from Snapshot
 
 on:
   workflow_dispatch:
