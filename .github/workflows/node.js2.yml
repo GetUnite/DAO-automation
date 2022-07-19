@@ -1,0 +1,45 @@
+name: Create votes on Snapshot
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron:  '0 12 * * SUN'
+
+
+jobs:
+  build:
+    name: Compile contracts and run action
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [16.x]
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+    steps:
+    - uses: actions/checkout@v3
+    - name: Launch action
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    - run: npm ci
+    - name: Create env file
+      run: |
+        touch .env
+        echo MNEMONIC=${MNEMONIC} >> .env
+        echo POLYGON_URL=${POLYGON_URL} >> .env
+        echo NODE_URL=${NODE_URL} >> .env
+        echo APY_VOTE_START_HOUR=${APY_VOTE_START_HOUR} >> .env
+        echo APY_VOTE_LENGTH_MSECONDS=${APY_VOTE_LENGTH_MSECONDS} >> .env
+        echo APY_VOTE_EFFECT_LENGTH_MSECONDS=${APY_VOTE_EFFECT_LENGTH_MSECONDS} >> .env
+        echo APY_VOTE_END_HOUR=${APY_VOTE_END_HOUR} >> .env
+        cat .env
+      env: 
+        MNEMONIC: ${{ secrets.MNEMONIC }} 
+        POLYGON_URL: ${{ secrets.POLYGON_URL }} 
+        NODE_URL: ${{ secrets.NODE_URL }}
+        APY_VOTE_START_HOUR: ${{ secrets.APY_VOTE_START_HOUR }}
+        APY_VOTE_LENGTH_MSECONDS: ${{ secrets.APY_VOTE_LENGTH_MSECONDS }}
+        APY_VOTE_EFFECT_LENGTH_MSECONDS: ${{ secrets.APY_VOTE_EFFECT_LENGTH_MSECONDS }}
+        APY_VOTE_END_HOUR: ${{ secrets.APY_VOTE_END_HOUR }}
+    - run: npx hardhat compile
+    - run: npx hardhat run scripts/executeApyProposal.ts --network node
