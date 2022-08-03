@@ -2,8 +2,8 @@ name: Create votes on Snapshot
 
 on:
   workflow_dispatch:
-  #schedule:
-  #  - cron:  '0 9 * * WED' # every hour at 0 minutes
+  schedule:
+    - cron:  '0 9 * * WED' # every hour at 0 minutes
 
 
 jobs:
