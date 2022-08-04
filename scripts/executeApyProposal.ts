@@ -86,6 +86,16 @@ async function getAllProposals(hub: string, space: string, voteFinishTime: numbe
 async function main() {
     const chainId = (await ethers.provider.getNetwork()).chainId;
     const voteEndHour = Number.parseInt(process.env.APY_VOTE_END_HOUR as string);
+    
+    const timerProvider = ethers.getDefaultProvider(process.env.POLYGON_URL as string);
+    let timerInterface = (await ethers.getContractAt("VoteTimer", voteExecutorMasterAddressMainnet)).interface;
+    let timer = new Contract("0x67578893643F6670a28AeF244F3Cd4d8257A4c7b", timerInterface, timerProvider);
+
+    if (!await timer.canExecute2WeekVote()) {
+        console.log("Timer says that it is not time to create votes, exiting...");
+        return;
+    }
+    console.log("Timer says that it is time to create votes");
 
     let hub = "https://hub.snapshot.org/graphql";
     let space = "alluo.eth";
