@@ -169,11 +169,9 @@ async function createLDVote(
     chainId: number,
 ) {
     const title = `[${asset}] Liquidity Direction: ${UTCStringToRemiString(times.voteEndTime.toUTCString())} to ${UTCStringToRemiString(times.apyEndTime.toUTCString())}`;
-    let body = `What should be the APY for the ${asset} pool?
+    let body = `Liquidity direction for for all assets in the ${asset} farm with Alluo.
 
-Note that if the spread is positive, the excess yield will be used to buy $ALLUO from the Balancer pool.
-
-If the the spread is negative, the missing yield will need to be financed by the treasury.`
+Each voted option will need a minimum of 5% of the total votes to be executed.`
 
     let hub = "https://hub.snapshot.org";
     let space = "alluo.eth";
