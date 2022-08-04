@@ -92,10 +92,10 @@ async function main() {
     let timer = new Contract("0x67578893643F6670a28AeF244F3Cd4d8257A4c7b", timerInterface, timerProvider);
 
     if (!await timer.canExecute2WeekVote()) {
-        console.log("Timer says that it is not time to create votes, exiting...");
+        console.log("Timer says that it is not time to execute votes, exiting...");
         return;
     }
-    console.log("Timer says that it is time to create votes");
+    console.log("Timer says that it is time to execute votes");
 
     let hub = "https://hub.snapshot.org/graphql";
     let space = "alluo.eth";
