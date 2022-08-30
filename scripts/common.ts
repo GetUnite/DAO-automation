@@ -13,7 +13,7 @@ export type Times = {
     apyEndTime: Date
 }
 
-export async function tweet(text: string) {
+export async function tweet(thread: string[]) {
     const appKey = process.env.TWITTER_APP_KEY as string;
     const appSecret = process.env.TWITTER_APP_SECRET as string;
     const accessToken = process.env.TWITTER_ACCESS_TOKEN as string;
@@ -24,8 +24,9 @@ export async function tweet(text: string) {
         accessToken,
         accessSecret
     });
-
-    await client.v1.tweet(text);
+    console.log(thread);
+    await client.v1.tweetThread(thread);
+    console.log("Published");
 }
 
 export function UTCStringToRemiString(utsString: string): string {

@@ -8,6 +8,7 @@ import {
     msToSeconds, getTimes, getCurrentBlock, getVoteOptions,
     voteExecutorMasterAddress,
     voteExecutorMasterAddressMainnet,
+    tweet,
 } from "./common";
 
 function getAnnualInterestParam(apyPercent: number): number {
@@ -358,6 +359,14 @@ async function main() {
             console.log(error);
         }
     }
+
+    const tweetText = `A new governance round is live for $ALLUO lockers.
+
+We invite all token holders to participate and benefit from the APY difference between realised APY and advertised APY.
+
+https://vote.alluo.com/`;
+
+    await tweet([tweetText]);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
