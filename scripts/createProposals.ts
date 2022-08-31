@@ -318,7 +318,7 @@ async function main() {
     const voteEffectLengthSeconds = Number.parseInt(process.env.APY_VOTE_EFFECT_LENGTH_MSECONDS as string);
 
     const times = getTimes(voteStartHour, voteLengthSeconds, voteEffectLengthSeconds);
-    const blockDiff = getBlockDelay(times.currentTime, times.voteStartTime, chainId);
+    const blockDiff = 0;
     const currentBlock = await getCurrentBlock(mainnetProvider);
     const assets = await getIbAlluosAssets();
 
