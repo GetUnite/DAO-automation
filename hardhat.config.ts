@@ -26,6 +26,16 @@ const config: HardhatUserConfig = {
   solidity: "0.8.11",
   defaultNetwork: "polygon",
   networks: {
+    hardhat: {
+      initialBaseFeePerGas: 5000000000,
+      forking: {
+        enabled: true,
+        url: process.env.MAINNET_URL || ""
+      },
+      accounts: {
+        count: 101
+      }
+    },
     polygon: {
       url: process.env.POLYGON_URL || "http://127.0.0.1/",
       accounts: {
@@ -36,6 +46,20 @@ const config: HardhatUserConfig = {
       url: process.env.NODE_URL || "https://kovan.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161", // found on google
       accounts: {
         mnemonic: process.env.MNEMONIC || "test test test test test test test test test test test junk"
+      }
+    },
+    mainnet: {
+      url: process.env.MAINNET_URL,
+      accounts: {
+        mnemonic: process.env.MNEMONIC,
+        count: 5
+      }
+    },
+    goerli: {
+      url: process.env.GOERLI_URL,
+      accounts: {
+        mnemonic: process.env.MNEMONIC,
+        count: 5
       }
     }
   }
