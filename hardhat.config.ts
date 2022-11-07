@@ -27,13 +27,12 @@ const config: HardhatUserConfig = {
   defaultNetwork: "polygon",
   networks: {
     hardhat: {
-      initialBaseFeePerGas: 5000000000,
       forking: {
         enabled: true,
         url: process.env.MAINNET_URL || ""
       },
       accounts: {
-        count: 101
+        count: 5
       }
     },
     polygon: {
@@ -52,7 +51,7 @@ const config: HardhatUserConfig = {
       url: process.env.MAINNET_URL,
       accounts: {
         mnemonic: process.env.MNEMONIC,
-        count: 5
+        count: 101
       }
     },
     goerli: {

@@ -1,12 +1,9 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { parseEther } from "ethers/lib/utils";
 import { ethers } from "hardhat";
 import { IERC20Metadata } from "../../typechain/IERC20Metadata";
-import { isGasPriceGood } from "./ethers";
 import { error, log, setPrepand } from "./logging";
 import { delay, getRandomExecutionPause } from "./timing";
 import { tradingLoop as tradingCycle } from "./trading";
-import { executeTrade } from "./uniswap";
 
 export let signers: SignerWithAddress[];
 export let alluo: IERC20Metadata;
@@ -21,16 +18,13 @@ async function init() {
 
     if (network.chainId == 31337) {
         log("Hardhat network detected, setting custom balance and buying ALLUO for everyone...");
-        await isGasPriceGood();
         for (let i = 0; i < signers.length; i++) {
             const signer = signers[i];
 
             await ethers.provider.send("hardhat_setBalance", [
                 signer.address,
-                "0x429d069189e0000",
+                "0xde0b6b3a7640000",
               ]);
-            
-            await executeTrade(signer, true, parseEther("0.15"));
         }
     }
 }

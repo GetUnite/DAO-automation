@@ -114,7 +114,9 @@ export async function executeTrade(
         log("    AlluoToken query: " + signer.address + " approved " + formatEther(approvalAmount) + " ALLUO to UniswapV3 Router (0xE592427A0AEce92De3Edee1F18E0157C05861564)");
         if (approvalAmount.lt(orderAmount)) {
             log("    Allowance is NOT enough, submitting approve tx")
-            const tx = await alluo.connect(signer).approve(router.address, constants.MaxUint256);
+            const gasLimit = await alluo.connect(signer).estimateGas.approve(router.address, constants.MaxUint256);
+            log("    Gas limit: " + gasLimit.toNumber());
+            const tx = await alluo.connect(signer).approve(router.address, constants.MaxUint256, { gasLimit: gasLimit });
             log("    Broadcasted ALLUO approve tx: " + tx.hash);
 
             log("    Waiting for ALLUO approve tx confirmation...");
@@ -165,7 +167,6 @@ export async function executeTrade(
                 calldataUnwrap,
             ], {
             gasLimit: gasLimit,
-            gasPrice: parseUnits("10.0", 9)
         }
         );
 
@@ -198,17 +199,16 @@ export async function executeTrade(
     };
     const gasLimit = await router.connect(signer).estimateGas.exactInputSingle(
         params, {
-            value: orderAmount,
-        }
+        value: orderAmount,
+    }
     );
     log("    Gas limit: " + gasLimit.toNumber());
 
     const tx = await router.connect(signer).exactInputSingle(
         params, {
-            value: orderAmount,
-            gasLimit: gasLimit,
-            gasPrice: parseUnits("10.0", 9)
-        }
+        value: orderAmount,
+        gasLimit: gasLimit,
+    }
     );
     log("    Broadcasted ALLUO buy tx: " + tx.hash);
     log("    Waiting for ALLUO buy tx confirmation...");
