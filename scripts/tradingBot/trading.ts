@@ -77,7 +77,7 @@ export async function tradingLoop() {
     log("Using address " + signerSecond.address + "to " + (doAlluo ? "sell" : "buy") + " ALLUO, amount: " + formatEther(amountReturned) + (doAlluo ? " ALLUO" : " ETH"));
 
     const amountReturnedReverse = await executeTrade(signerFirst, !doAlluo, amountReturned);
-    if (doAlluo) {
+    if (!doAlluo) {
         alluoVolume = alluoVolume.add(amountReturnedReverse);
     } else {
         ethVolume = ethVolume.add(amountReturnedReverse);
