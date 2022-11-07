@@ -7,6 +7,9 @@ import { delay, getRandomOppositeTradePause } from "./timing";
 import { randomInRange } from "./tools";
 import { executeTrade, getAlluoForExactEth } from "./uniswap";
 
+let alluoVolume = BigNumber.from(0);
+let ethVolume = BigNumber.from(0);
+
 async function getTradeVolume(doAlluo: boolean): Promise<BigNumber> {
     const min = 50000000; // 0.050000000000000000
     const max = 1000000000; // 1.000000000000000000
@@ -53,6 +56,12 @@ export async function tradingLoop() {
 
     log("First trade:")
     const amountReturned = await executeTrade(signerFirst, doAlluo, volume);
+    if (doAlluo) {
+        alluoVolume = alluoVolume.add(amountReturned);
+    } else {
+        ethVolume = ethVolume.add(amountReturned);
+    }
+    log("Total volume: " + formatEther(ethVolume) + " ETH, " + formatEther(alluoVolume) + " ALLUO");
 
     const pauseBeforeReverse = getRandomOppositeTradePause();
     log("Waiting for " + pauseBeforeReverse + " seconds before reverse trade...")
@@ -68,6 +77,13 @@ export async function tradingLoop() {
     log("Using address " + signerSecond.address + "to " + (doAlluo ? "sell" : "buy") + " ALLUO, amount: " + formatEther(amountReturned) + (doAlluo ? " ALLUO" : " ETH"));
 
     const amountReturnedReverse = await executeTrade(signerFirst, !doAlluo, amountReturned);
+    if (doAlluo) {
+        alluoVolume = alluoVolume.add(amountReturnedReverse);
+    } else {
+        ethVolume = ethVolume.add(amountReturnedReverse);
+    }
+    log("Total volume: " + formatEther(ethVolume) + " ETH, " + formatEther(alluoVolume) + " ALLUO");
+
     log("Reverse trade finished");
     log("Cycle completed successfully");
 }
