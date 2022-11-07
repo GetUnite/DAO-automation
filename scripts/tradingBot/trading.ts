@@ -32,11 +32,11 @@ function doAlluoBuy(): boolean {
 
 export async function tradingLoop() {
     if (!await isGasPriceGood()) {
-        log("Gas price is not good (below " + gasPriceThreshold + " gwei), skipping cycle...");
+        log("Gas price is not good (above " + gasPriceThreshold + " gwei), skipping cycle...");
         return;
     }
 
-    log("Gas price is good (above " + gasPriceThreshold + " gwei), proceeding to trading...");
+    log("Gas price is good (below " + gasPriceThreshold + " gwei), proceeding to trading...");
 
     let doAlluo = doAlluoBuy();
     let volume = await getTradeVolume(doAlluo);
