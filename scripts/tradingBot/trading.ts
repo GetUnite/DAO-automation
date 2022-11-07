@@ -49,7 +49,7 @@ export async function tradingLoop() {
         signerFirst = await getRandomSigner(volume, doAlluo);
     }
 
-    log("Using address " + signerFirst.address + "to " + (doAlluo ? "buy" : "sell") + " ALLUO, amount: " + formatEther(volume) + (doAlluo ? " ETH" : " ALLUO"));
+    log("Using address " + signerFirst.address + " to " + (doAlluo ? "buy" : "sell") + " ALLUO, amount: " + formatEther(volume) + (doAlluo ? " ETH" : " ALLUO"));
 
     log("First trade:")
     const amountReturned = await executeTrade(signerFirst, doAlluo, volume);
