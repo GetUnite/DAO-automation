@@ -30,7 +30,7 @@ export async function getRandomSigner(minBalance: BigNumberish, buyAlluo: boolea
                 await signer.getBalance():
                 await alluo.callStatic.balanceOf(signer.address);
             if (balance.gte(minBalance)) {
-                log("Address " + signer.address + " has enough balance (" + formatEther(balance) + " " + asset + ")");
+                log("Address " + signer.address + " at index " + index + " has enough balance (" + formatEther(balance) + " " + asset + ")");
                 setPrepand(prepandBefore);
                 return signer;
             }
