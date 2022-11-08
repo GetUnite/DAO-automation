@@ -24,16 +24,24 @@ function getInterestPerSecondParam(apyPercent: number): string {
 
 async function createTreasuryVote(
     times: Times,
+    treasuryValue: number[],
     options: string[],
     blockSnapshot: number,
     chainId: number,
 ) {
     const title = `Percentage of treasury invested:  ${UTCStringToRemiString(times.voteEndTime.toUTCString())} to ${UTCStringToRemiString(times.apyEndTime.toUTCString())}`;
-    let body = `What should be the percentage of the treasury invested in the protocol?
+    let body = `What should be the percentage of the treasury invested in the protocol? 
+
+The previous treasury invested in the protocol is: ${treasuryValue[0]}
+The current treasury value is: ${treasuryValue[1]}
 
 All the yield that is generated from this position will be used to contribute ETH to the ETH-ALLUO Balancer pool.
 
-The more we invest the more we can generate yield and contribute ETH to the pool but it creates a risk to the protocol's treasury.`
+The more we invest the more we can generate yield and contribute ETH to the pool but it creates a risk to the protocol's treasury.
+
+Parameters for contract:
+\`\`\`json
+`
 
     let hub = "https://hub.snapshot.org";
     let space = "alluo.eth";
@@ -46,7 +54,13 @@ The more we invest the more we can generate yield and contribute ETH to the pool
     else {
         console.log("Using mainnet hub, space and contract");
     }
-
+    const proposalType = "Treasury Vote"
+    body += JSON.stringify({
+        type: proposalType,
+        args: options,
+        value: treasuryValue
+    }, null, 4) + "\n```";
+    
     const discussion = "https://discord.gg/jNaQF6sMxf";
     const plugins = JSON.stringify({});
     const type = "quadratic";
@@ -172,7 +186,11 @@ async function createLDVote(
     const title = `[${asset}] Liquidity Direction: ${UTCStringToRemiString(times.voteEndTime.toUTCString())} to ${UTCStringToRemiString(times.apyEndTime.toUTCString())}`;
     let body = `Liquidity direction for for all assets in the ${asset} farm with Alluo.
 
-Each voted option will need a minimum of 5% of the total votes to be executed.`
+Each voted option will need a minimum of 5% of the total votes to be executed.
+
+Parameters for contract:
+\`\`\`json
+`
 
     let hub = "https://hub.snapshot.org";
     let space = "alluo.eth";
@@ -185,6 +203,11 @@ Each voted option will need a minimum of 5% of the total votes to be executed.`
     else {
         console.log("Using mainnet hub, space and contract");
     }
+    const proposalType = "Liquidity Direction Vote"
+    body += JSON.stringify({
+        type: proposalType,
+        args: options
+    }, null, 4) + "\n```";
 
     const discussion = "https://discord.gg/jNaQF6sMxf";
     const plugins = JSON.stringify({});
@@ -323,18 +346,9 @@ async function main() {
     const assets = await getIbAlluosAssets();
 
     try {
-        const optionsMint = getVoteOptions(times.voteStartTime, "mintProposalOptions", "mintProposalOptions");
-
-        await createMintVote(times, optionsMint, currentBlock + blockDiff, chainId, mainnetProvider);
-
-    } catch (error) {
-        console.log(error);
-    }
-
-    try {
         const optionsTreasury = getVoteOptions(times.voteStartTime, "treasuryPercentageOptions", "treasuryPercentageOptions");
 
-        await createTreasuryVote(times, optionsTreasury, currentBlock + blockDiff, chainId);
+        await createTreasuryVote(times, optionsTreasury[1], optionsTreasury[0], currentBlock + blockDiff, chainId);
 
     } catch (error) {
         console.log(error);

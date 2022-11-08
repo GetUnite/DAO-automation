@@ -1,7 +1,8 @@
 import { Contract, Wallet } from "ethers";
+import { parseEther } from "ethers/lib/utils";
 import { ethers } from "hardhat";
 import fetch from 'node-fetch';
-import { voteExecutorMasterAddressMainnet } from "./common";
+import { voteExecutorMasterAddressMainnet, voteExecutorMasterAddress } from "./common";
 
 type Proposal = {
     id: string,
@@ -13,6 +14,7 @@ type Proposal = {
     snapshot: string,
     state: string,
     scores: number[],
+    scores_by_strategy: number[][]
     author: string,
     space: {
         id: string,
@@ -28,8 +30,17 @@ type VoteParams = {
             cmd: string,
         }
         stringOption: string
-    }[]
+    }[],
+    value: number[]
 };
+
+type winningParam = {
+    data: {
+        cmdIndex: string;
+        cmd: string;
+    };
+    stringOption: string;
+}
 
 function extractVoteParamsFromProposalBody(proposal: Proposal): VoteParams | null {
     const regex = /\`\`\`json.*\`\`\`/gs;
@@ -57,6 +68,7 @@ async function getAllProposals(hub: string, space: string, voteFinishTime: numbe
     snapshot
     state
     scores
+    scores_by_strategy
     author
     space {
       id
@@ -90,11 +102,13 @@ async function main() {
     const timerProvider = ethers.getDefaultProvider(process.env.POLYGON_URL as string);
     let timerInterface = (await ethers.getContractAt("VoteTimer", voteExecutorMasterAddressMainnet)).interface;
     let timer = new Contract("0x67578893643F6670a28AeF244F3Cd4d8257A4c7b", timerInterface, timerProvider);
+    const veMasterInterface = await ethers.getContractAt("IVoteExecutorMaster", voteExecutorMasterAddress);
 
     if (!await timer.canExecute2WeekVote()) {
         console.log("Timer says that it is not time to execute votes, exiting...");
         return;
     }
+
     console.log("Timer says that it is time to execute votes");
 
     let hub = "https://hub.snapshot.org/graphql";
@@ -109,7 +123,9 @@ async function main() {
         console.log("Using mainnet hub and space");
     }
 
+
     let todayFinishTime = (new Date().setUTCHours(voteEndHour, 0, 0, 0)) / 1000;
+
     if ((new Date().valueOf()) <= (todayFinishTime * 1000)) {
         throw new Error(`It is too early - expecting current time (${new Date().toUTCString()}) to be above ${new Date(todayFinishTime * 1000).toUTCString()}`);
     }
@@ -118,13 +134,15 @@ async function main() {
     const toExecute = await getAllProposals(hub, space, todayFinishTime);
     console.log(toExecute.length, "proposal(-s) to execute");
 
-    let winningParams: {
-        data: {
-            cmdIndex: string;
-            cmd: string;
-        };
-        stringOption: string;
-    }[] = [];
+    let winningParams: winningParam[]= [];
+
+    const mainnetProvider = new ethers.providers.JsonRpcProvider(process.env.NODE_URL as string);
+    let signer = Wallet.fromMnemonic(process.env.MNEMONIC as string);
+    signer = new Wallet(signer.privateKey, mainnetProvider);
+
+    const veMaster = new Contract(voteExecutorMasterAddress, veMasterInterface.interface, signer);
+
+
     for (let i = 0; i < toExecute.length; i++) {
         const proposal = toExecute[i];
         const params = extractVoteParamsFromProposalBody(proposal)
@@ -134,33 +152,46 @@ async function main() {
             console.log("Assuming that it is not executable, skipping...");
             continue;
         }
+        if (params.type == "Liquidity Direction Vote") {
+            const winningDataArray = await getLiquidityDirectionData(proposal, params);
+            if (winningDataArray === null || winningDataArray == undefined) {
+                throw new Error("Error " + proposal.id);
+            }
+            winningParams = winningParams.concat(winningDataArray);
 
-        const winningOption = getWinningVoteOption(proposal);
+        } else {
+            const winningOption = await getWinningVoteOption(proposal,params);
 
-        if (winningOption === null) {
-            throw new Error("Looks like noone voted on proposal id " + proposal.id);
+            if (winningOption === null) {
+                throw new Error("Looks like noone voted on proposal id " + proposal.id);
+            }
+            if (winningOption === undefined) {
+                throw new Error("There are votes that got exactly equal votes in proposal id " + proposal.id);
+            }
+    
+            console.log(winningOption);
+            if (params.type == "Treasury Vote") {
+                const percentageAsDecimal = parseFloat(winningOption) /100
+                const treasuryValuePrevious = params.value[0]
+                const treasuryValueCurrent = params.value[1]
+                const rawVoteAmount = treasuryValueCurrent * percentageAsDecimal;
+                const delta = rawVoteAmount - treasuryValuePrevious;
+                const data = await veMaster.callStatic.encodeTreasuryAllocationChangeCommand(parseEther(String(delta)))
+                winningParams.push({data:{cmdIndex: data[0].toString(), cmd: data[1]}, stringOption:"Treasury Vote"})
+    
+            } else {
+                const winningParam = params!.args.find((x) => x.stringOption == winningOption)!;
+                winningParams.push(winningParam);
+            }
+
         }
-        if (winningOption === undefined) {
-            throw new Error("There are votes that got exactly equal votes in proposal id " + proposal.id);
-        }
-
-        console.log(winningOption);
-
-        const winningParam = params!.args.find((x) => x.stringOption == winningOption)!;
-        winningParams.push(winningParam);
+     
     }
 
     if (winningParams.length > 0) {
         const commandIndexes = winningParams.map((x) => Number.parseInt(x.data.cmdIndex));
         const commands = winningParams.map((x) => x.data.cmd);
-
-        const mainnetProvider = new ethers.providers.JsonRpcProvider(process.env.NODE_URL as string);
-        let signer = Wallet.fromMnemonic(process.env.MNEMONIC as string);
-        signer = new Wallet(signer.privateKey, mainnetProvider);
-
-        const veMasterInterface = await ethers.getContractAt("IVoteExecutorMaster", voteExecutorMasterAddressMainnet);
-        const veMaster = new Contract(voteExecutorMasterAddressMainnet, veMasterInterface.interface, signer);
-
+       console.log("winning params", winningParams)
         console.log("Tx sender address:", signer.address)
         const cmdEncoded = await veMaster.callStatic.encodeAllMessages(commandIndexes, commands);
 
@@ -176,7 +207,8 @@ async function main() {
     }
 }
 
-function getWinningVoteOption(proposal: Proposal): string | null | undefined {
+async function getWinningVoteOption(proposal: Proposal, params: VoteParams): Promise<string | null | undefined> {
+    console.log(proposal.scores_by_strategy);
     const maxScore = Math.max.apply(null, proposal.scores);
     if (maxScore == 0) {
         return null;
@@ -185,8 +217,36 @@ function getWinningVoteOption(proposal: Proposal): string | null | undefined {
         return undefined;
     }
     const maxIndex = proposal.scores.findIndex((x) => x == maxScore);
+    
 
     return proposal.choices[maxIndex];
+}
+async function getLiquidityDirectionData(proposal: Proposal, params: VoteParams): Promise<winningParam[] | null | undefined > {
+    let winningParams : winningParam[] = []
+
+    const mainnetProvider = new ethers.providers.JsonRpcProvider(process.env.NODE_URL as string);
+    let signer = Wallet.fromMnemonic(process.env.MNEMONIC as string);
+    signer = new Wallet(signer.privateKey, mainnetProvider);
+    const veMasterInterface = await ethers.getContractAt("IVoteExecutorMaster", voteExecutorMasterAddress);
+    const veMaster = new Contract(voteExecutorMasterAddress, veMasterInterface.interface, signer);
+
+
+    // Replace all votes with less than 5% with 0.
+    const totalVotesCasted = proposal.scores.reduce((previousValue, currentValue) => previousValue + currentValue)
+    console.log("Before",proposal.scores)
+    proposal.scores = proposal.scores.map((score: number) => { return score < totalVotesCasted * 0.05 ? 0 : score; });
+    const newTotalVotesCasted = proposal.scores.reduce((previousValue, currentValue) => previousValue + currentValue)
+    console.log("Before1",proposal.scores)
+
+    for (let i=0; i < proposal.scores.length; i++) {
+        if (proposal.scores[i] == 0) {continue}
+        const percentage = proposal.scores[i] / newTotalVotesCasted * 10000
+        console.log(proposal.choices[i].split(" ").slice(0,2))
+        const commandKeyWord = proposal.choices[i].split(" ").slice(0,2).join(" ");
+        const data = await veMaster.callStatic.encodeLiquidityCommand(commandKeyWord, percentage.toFixed(0));
+        winningParams.push({data: {cmdIndex: data[0].toString(), cmd: data[1]}, stringOption: commandKeyWord})
+    }
+    return winningParams
 }
 
 // We recommend this pattern to be able to use async/await everywhere

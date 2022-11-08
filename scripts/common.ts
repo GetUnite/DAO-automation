@@ -3,7 +3,7 @@ import { ethers } from "hardhat";
 import fs from 'fs';
 import Twitter from "twitter-api-v2";
 
-export const voteExecutorMasterAddress = "0x279c129a1d2f9213c6e326b729d9fe0cd4941a05";
+export const voteExecutorMasterAddress = "0x696d4EF7df862dFff9Af326DeFa03883CAc1b2bD";
 export const voteExecutorMasterAddressMainnet = "0x4Fd58328C2e0dDa1Ea8f4C70321C91B366582eA2";
 
 export type Times = {
@@ -124,7 +124,7 @@ export function getVoteOptions(voteDate: Date, optionsType: string, folder: stri
 export function getTimes(voteStartHour: number, voteLengthSeconds: number, voteEffectLengthSeconds: number): Times {
     const currentTime = new Date(Date.now());
     let voteStartTime = new Date(cloneDate(currentTime).setUTCHours(voteStartHour, 0, 0, 0));
-
+    
     // search for next Wednesday
     while (voteStartTime.getDay() != 3) {
         voteStartTime.setUTCDate(

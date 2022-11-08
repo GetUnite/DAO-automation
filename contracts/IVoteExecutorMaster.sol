@@ -8,8 +8,18 @@ interface IVoteExecutorMaster {
     }
 
     //vote creation stage
+    function encodeLiquidityCommand(
+        string memory _codeName,
+        uint256 _percent
+    ) external returns (uint256, bytes memory);
 
-    function encodeApyCommand(
+    function encodeTreasuryAllocationChangeCommand(
+        int256 _delta
+    ) external returns (uint256, bytes memory);
+
+    //after vote stage
+
+     function encodeApyCommand(
         string memory _ibAlluoName, //exact ibAlluo symbol
         uint256 _newAnnualInterest,
         uint256 _newInterestPerSecond
@@ -21,18 +31,6 @@ interface IVoteExecutorMaster {
             bytes memory
         );
 
-    function encodeMintCommand(
-        uint256 _newMintAmount,
-        uint256 _newRewardPerDistribution
-    )
-        external
-        pure
-        returns (
-            uint256, // command index == 1
-            bytes memory // comcand
-        );
-
-    //after vote stage
 
     function encodeAllMessages(
         uint256[] memory _commandIndexes,
