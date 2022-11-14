@@ -23,7 +23,7 @@ async function init() {
 
             await ethers.provider.send("hardhat_setBalance", [
                 signer.address,
-                "0xde0b6b3a7640000",
+                "0x367f3bbb9448bd40", // 3.926923076923080000 - 367f3bbb9448bd40
               ]);
         }
     }
@@ -42,7 +42,8 @@ async function main() {
         } catch (err) {
             error("Error in trading cycle");
             console.log("\n", err, "\n");
-            error("Skipping this cycle because of error");
+            error("Unsuccessful cycle, restarting");
+            continue;
         }
 
         setPrepand("");

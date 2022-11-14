@@ -32,7 +32,7 @@ const config: HardhatUserConfig = {
         url: process.env.MAINNET_URL || ""
       },
       accounts: {
-        count: 5
+        count: 11
       }
     },
     polygon: {
@@ -51,7 +51,7 @@ const config: HardhatUserConfig = {
       url: process.env.MAINNET_URL,
       accounts: {
         mnemonic: process.env.MNEMONIC,
-        count: 101
+        count: 11
       }
     },
     goerli: {

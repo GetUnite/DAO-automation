@@ -6,7 +6,7 @@ import { alluo, signers } from "./bot";
 import { getPrepand, log, setPrepand, warning } from "./logging";
 import { randomInRange, shuffle } from "./tools";
 
-export const gasPriceThreshold = 15; // gwei
+export const gasPriceThreshold = 22; // gwei
 
 export async function isGasPriceGood(): Promise<boolean> {
     const currentGasPrice = await ethers.provider.getGasPrice();
