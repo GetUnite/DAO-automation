@@ -23,7 +23,7 @@ const poolContract = new ethers.Contract(poolAddress, IUniswapV3PoolABI, hethers
 const quoterAddress = "0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6";
 const quoterContract = new ethers.Contract(quoterAddress, QuoterABI, hethers.provider)
 
-const slippage = 75; // 0.75%
+const slippage = 10; // 0.1%
 
 function calculateSlippage(expectedOutput: BigNumber) {
     const delta = expectedOutput.mul(slippage).div(10000);
