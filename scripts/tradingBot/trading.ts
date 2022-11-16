@@ -11,8 +11,8 @@ let alluoVolume = BigNumber.from(0);
 let ethVolume = BigNumber.from(0);
 
 async function getTradeVolume(doAlluo: boolean): Promise<BigNumber> {
-    const min = 128205128205128; // 1.282051282051280000
-    const max = 384615384615385; // 3.846153846153850000
+    const min = 63300000000000; // 0.633 ETH
+    const max = 189885000000000; // 1.89885 ETH
 
     const ethValue = BigNumber.from(randomInRange(min, max)).mul("10000");
 
