@@ -7,6 +7,8 @@ import { formatUnits } from 'ethers/lib/utils';
 
 const bot: Telegraf<Context<Update>> = new Telegraf(process.env.TELEGRAM_BOT_API as string);
 
+const uniswapRouter = "0xE592427A0AEce92De3Edee1F18E0157C05861564";
+
 const knownAddress = [
     // Automation mnemonic addresses
     '0xfc32Afc3B324b45323A77785f63a2c7108B04200', // DAO automation bot
@@ -66,7 +68,6 @@ bot.command("listentesttrades", (ctx) => {
         const contract = new Contract(address, abi, ethers.provider);
         const event: SwapEvent = contract.interface.decodeEventLog("Swap", log.data, log.topics) as unknown as SwapEvent;
 
-        console.log(event.recipient);
         ctx.reply(
 `
 UniswapV3 exchange USDC-WETH:
@@ -75,8 +76,8 @@ Pool balance diff:
 USDC: ${formatUnits(event.amount0.toString(), 6)}
 WETH: ${formatUnits(event.amount1.toString(), 18)}
 
-Recepient: ${event.recipient} ${knownAddress.includes(event.recipient) ? "(known address)" : "UNKNOWN ADDRESS"}
-Sender: ${event.sender} ${knownAddress.includes(event.sender) ? "(known address)" : "UNKNOWN ADDRESS"}
+Recepient: ${event.recipient} ${knownAddress.includes(event.recipient) ? "(known address)" : (event.recipient == uniswapRouter ? "UniswapV3 router" : "UNKNOWN ADDRESS")}
+Sender: ${event.sender} ${knownAddress.includes(event.sender) ? "(known address)" : (event.sender == uniswapRouter ? "UniswapV3 router" : "UNKNOWN ADDRESS")}
 
 Tx: https://etherscan.io/tx/${log.transactionHash}
 `  
@@ -100,7 +101,6 @@ bot.command("listenalluotrades", (ctx) => {
         const contract = new Contract(address, abi, ethers.provider);
         const event: SwapEvent = contract.interface.decodeEventLog("Swap", log.data, log.topics) as unknown as SwapEvent;
 
-        console.log(event.recipient);
         ctx.reply(
 `
 UniswapV3 exchange ALLUO-WETH:
@@ -109,8 +109,8 @@ Pool balance diff:
 ALLUO: ${formatUnits(event.amount0.toString(), 18)}
 WETH: ${formatUnits(event.amount1.toString(), 18)}
 
-Recepient: ${event.recipient} ${knownAddress.includes(event.recipient) ? "(known address)" : "UNKNOWN ADDRESS"}
-Sender: ${event.sender} ${knownAddress.includes(event.sender) ? "(known address)" : "UNKNOWN ADDRESS"}
+Recepient: ${event.recipient} ${knownAddress.includes(event.recipient) ? "(known address)" : (event.recipient == uniswapRouter ? "UniswapV3 router" : "UNKNOWN ADDRESS")}
+Sender: ${event.sender} ${knownAddress.includes(event.sender) ? "(known address)" : (event.sender == uniswapRouter ? "UniswapV3 router" : "UNKNOWN ADDRESS")}
 
 Tx: https://etherscan.io/tx/${log.transactionHash}
 `  
@@ -133,6 +133,10 @@ bot.command("logs", (ctx) => {
             filename: `${new Date().toUTCString()}_bot_logs.log`
         }
     );
+});
+
+bot.catch((err, ctx) => {
+    console.log(err);
 });
 
 bot.launch();
