@@ -129,6 +129,7 @@ bot.command("getbalances", async (ctx) => {
         balances += `Index ${i} - ${element}:
 ETH: ${formatEther(await ethers.provider.getBalance(element))}
 ALLUO: ${formatEther(await alluo.balanceOf(element))}
+https://etherscan.io/address/${element}
 
 `
     }
