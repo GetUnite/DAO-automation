@@ -3,11 +3,17 @@ import { Update } from 'typegram';
 
 import { ethers } from 'hardhat';
 import { BigNumber, Contract } from 'ethers';
-import { formatUnits } from 'ethers/lib/utils';
+import { formatEther, formatUnits } from 'ethers/lib/utils';
+import { IERC20Metadata } from '../../typechain';
 
 const bot: Telegraf<Context<Update>> = new Telegraf(process.env.TELEGRAM_BOT_API as string);
 
 const uniswapRouter = "0xE592427A0AEce92De3Edee1F18E0157C05861564";
+
+let alluo: IERC20Metadata;
+ethers.getContractAt("IERC20Metadata", "0x1e5193ccc53f25638aa22a940af899b692e10b09").then((x) => {
+    alluo = x
+});
 
 const knownAddress = [
     // Automation mnemonic addresses
@@ -20,8 +26,6 @@ const knownAddress = [
     '0x2A1160B40a4BF67668D8264FcBBc292523e9a49e', // #6 for trading
     '0xAA2B30afae9d375c43be20ed09AE3AeA3aE68C21', // #7 for trading
     '0x7d330C5d3b2bA38c10FD5222d37e6dd6f2A294Eb', // #8 for trading
-    '0x096B31DD262B323d1178c2cf00943f96AE809Bd2', // #9 for trading
-    '0xf2eB9cbf7D34077DAf821188ebAe1A6086232Ed5'  // #10 for trading
 ]
 
 type SwapEvent = {
@@ -69,7 +73,7 @@ bot.command("listentesttrades", (ctx) => {
         const event: SwapEvent = contract.interface.decodeEventLog("Swap", log.data, log.topics) as unknown as SwapEvent;
 
         ctx.reply(
-`
+            `
 UniswapV3 exchange USDC-WETH:
 
 Pool balance diff:
@@ -80,7 +84,7 @@ Recepient: ${event.recipient} ${knownAddress.includes(event.recipient) ? "(known
 Sender: ${event.sender} ${knownAddress.includes(event.sender) ? "(known address)" : (event.sender == uniswapRouter ? "UniswapV3 router" : "UNKNOWN ADDRESS")}
 
 Tx: https://etherscan.io/tx/${log.transactionHash}
-`  
+`
         )
     })
 })
@@ -102,7 +106,7 @@ bot.command("listenalluotrades", (ctx) => {
         const event: SwapEvent = contract.interface.decodeEventLog("Swap", log.data, log.topics) as unknown as SwapEvent;
 
         ctx.reply(
-`
+            `
 UniswapV3 exchange ALLUO-WETH:
 
 Pool balance diff:
@@ -113,10 +117,24 @@ Recepient: ${event.recipient} ${knownAddress.includes(event.recipient) ? "(known
 Sender: ${event.sender} ${knownAddress.includes(event.sender) ? "(known address)" : (event.sender == uniswapRouter ? "UniswapV3 router" : "UNKNOWN ADDRESS")}
 
 Tx: https://etherscan.io/tx/${log.transactionHash}
-`  
+`
         )
     })
 })
+
+bot.command("getbalances", async (ctx) => {
+    let balances = "Trading bot accounts balances:\n\n";
+    for (let i = 0; i < knownAddress.length; i++) {
+        const element = knownAddress[i];
+        balances += `Index ${i} - ${element}:
+ETH: ${formatEther(await ethers.provider.getBalance(element))}
+ALLUO: ${formatEther(await alluo.balanceOf(element))}
+
+`
+    }
+
+    ctx.reply(balances);
+});
 
 bot.command("stoplisteners", (ctx) => {
     ctx.reply('Stopped all listeners');
