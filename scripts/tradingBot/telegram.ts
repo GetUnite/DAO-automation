@@ -124,15 +124,27 @@ Tx: https://etherscan.io/tx/${log.transactionHash}
 
 bot.command("getbalances", async (ctx) => {
     let balances = "Trading bot accounts balances:\n\n";
+    let alluoTotal = BigNumber.from(0);
+    let ethTotal = BigNumber.from(0);
     for (let i = 0; i < knownAddress.length; i++) {
         const element = knownAddress[i];
+	const alluoBalance = await alluo.balanceOf(element);
+	const ethBalance = await ethers.provider.getBalance(element);
+
         balances += `Index ${i} - ${element}:
-ETH: ${formatEther(await ethers.provider.getBalance(element))}
-ALLUO: ${formatEther(await alluo.balanceOf(element))}
+ETH: ${formatEther(ethBalance)}
+ALLUO: ${formatEther(alluoBalance)}
 https://etherscan.io/address/${element}
 
 `
+	ethTotal = ethTotal.add(ethBalance);
+	alluoTotal = alluoTotal.add(alluoBalance);
     }
+
+    balances += `
+
+Total ETH - ${formatEther(ethTotal)}
+Total ALLUO - ${formatEther(alluoTotal)}`;
 
     ctx.reply(balances);
 });
