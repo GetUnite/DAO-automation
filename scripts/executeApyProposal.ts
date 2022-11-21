@@ -102,7 +102,11 @@ async function main() {
     const timerProvider = ethers.getDefaultProvider(process.env.POLYGON_URL as string);
     let timerInterface = (await ethers.getContractAt("VoteTimer", voteExecutorMasterAddressMainnet)).interface;
     let timer = new Contract("0x67578893643F6670a28AeF244F3Cd4d8257A4c7b", timerInterface, timerProvider);
-    const veMasterInterface = await ethers.getContractAt("IVoteExecutorMaster", voteExecutorMasterAddress);
+
+    // Enable only for tests
+    // const veMasterInterface = await ethers.getContractAt("IVoteExecutorMaster", voteExecutorMasterAddress);
+
+    const veMasterInterface = await ethers.getContractAt("IVoteExecutorMaster", voteExecutorMasterAddressMainnet);
 
     if (!await timer.canExecute2WeekVote()) {
         console.log("Timer says that it is not time to execute votes, exiting...");
@@ -123,6 +127,9 @@ async function main() {
         console.log("Using mainnet hub and space");
     }
 
+    // Only for tests
+    // hub = "https://testnet.snapshot.org/graphql";
+    // space = "0xtuytuy.eth";
 
     let todayFinishTime = (new Date().setUTCHours(voteEndHour, 0, 0, 0)) / 1000;
 
@@ -140,7 +147,9 @@ async function main() {
     let signer = Wallet.fromMnemonic(process.env.MNEMONIC as string);
     signer = new Wallet(signer.privateKey, mainnetProvider);
 
-    const veMaster = new Contract(voteExecutorMasterAddress, veMasterInterface.interface, signer);
+    // Enable only for tests
+    // const veMaster = new Contract(voteExecutorMasterAddress, veMasterInterface.interface, signer);
+    const veMaster = new Contract(voteExecutorMasterAddressMainnet, veMasterInterface.interface, signer);
 
 
     for (let i = 0; i < toExecute.length; i++) {
@@ -197,6 +206,7 @@ async function main() {
 
         console.log("Message hash:", cmdEncoded.messagesHash);
         console.log("Trying to broadcast tx...");
+        console.log(cmdEncoded)
         const tx = await veMaster.submitData(cmdEncoded.inputData);
 
         console.log("Tx is broadcasted on chainId", (await ethers.provider.getNetwork()).chainId, "txHash:", tx.hash);
@@ -227,22 +237,25 @@ async function getLiquidityDirectionData(proposal: Proposal, params: VoteParams)
     const mainnetProvider = new ethers.providers.JsonRpcProvider(process.env.NODE_URL as string);
     let signer = Wallet.fromMnemonic(process.env.MNEMONIC as string);
     signer = new Wallet(signer.privateKey, mainnetProvider);
-    const veMasterInterface = await ethers.getContractAt("IVoteExecutorMaster", voteExecutorMasterAddress);
-    const veMaster = new Contract(voteExecutorMasterAddress, veMasterInterface.interface, signer);
 
+    // Enable below only for tests
+    // const veMasterInterface = await ethers.getContractAt("IVoteExecutorMaster", voteExecutorMasterAddress);
+    // const veMaster = new Contract(voteExecutorMasterAddress, veMasterInterface.interface, signer);
+
+    const veMasterInterface = await ethers.getContractAt("IVoteExecutorMaster", voteExecutorMasterAddressMainnet);
+    const veMaster = new Contract(voteExecutorMasterAddressMainnet, veMasterInterface.interface, signer);
 
     // Replace all votes with less than 5% with 0.
     const totalVotesCasted = proposal.scores.reduce((previousValue, currentValue) => previousValue + currentValue)
-    console.log("Before",proposal.scores)
     proposal.scores = proposal.scores.map((score: number) => { return score < totalVotesCasted * 0.05 ? 0 : score; });
     const newTotalVotesCasted = proposal.scores.reduce((previousValue, currentValue) => previousValue + currentValue)
-    console.log("Before1",proposal.scores)
 
     for (let i=0; i < proposal.scores.length; i++) {
-        if (proposal.scores[i] == 0) {continue}
+        // if (proposal.scores[i] == 0) {continue}
         const percentage = proposal.scores[i] / newTotalVotesCasted * 10000
-        console.log(proposal.choices[i].split(" ").slice(0,2))
         const commandKeyWord = proposal.choices[i].split(" ").slice(0,2).join(" ");
+        console.log("Percentage:", percentage.toFixed(0), "commandKeyword", commandKeyWord)
+
         const data = await veMaster.callStatic.encodeLiquidityCommand(commandKeyWord, percentage.toFixed(0));
         winningParams.push({data: {cmdIndex: data[0].toString(), cmd: data[1]}, stringOption: commandKeyWord})
     }

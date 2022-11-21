@@ -54,6 +54,11 @@ Parameters for contract:
     else {
         console.log("Using mainnet hub, space and contract");
     }
+
+    // Enable only for tests
+    // hub = "https://testnet.snapshot.org";
+    // space = "0xtuytuy.eth";
+
     const proposalType = "Treasury Vote"
     body += JSON.stringify({
         type: proposalType,
@@ -203,6 +208,12 @@ Parameters for contract:
     else {
         console.log("Using mainnet hub, space and contract");
     }
+
+    // Enable only for tests
+    // hub = "https://testnet.snapshot.org";
+    // space = "0xtuytuy.eth";
+
+
     const proposalType = "Liquidity Direction Vote"
     body += JSON.stringify({
         type: proposalType,

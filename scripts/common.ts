@@ -4,7 +4,7 @@ import fs from 'fs';
 import Twitter from "twitter-api-v2";
 
 export const voteExecutorMasterAddress = "0x696d4EF7df862dFff9Af326DeFa03883CAc1b2bD";
-export const voteExecutorMasterAddressMainnet = "0x4Fd58328C2e0dDa1Ea8f4C70321C91B366582eA2";
+export const voteExecutorMasterAddressMainnet = "0x82e568C482dF2C833dab0D38DeB9fb01777A9e89";
 
 export type Times = {
     currentTime: Date,
@@ -124,7 +124,8 @@ export function getVoteOptions(voteDate: Date, optionsType: string, folder: stri
 export function getTimes(voteStartHour: number, voteLengthSeconds: number, voteEffectLengthSeconds: number): Times {
     const currentTime = new Date(Date.now());
     let voteStartTime = new Date(cloneDate(currentTime).setUTCHours(voteStartHour, 0, 0, 0));
-    
+    // Only use the below for manual runs
+    // voteStartTime = currentTime
     // search for next Wednesday
     while (voteStartTime.getDay() != 3) {
         voteStartTime.setUTCDate(
