@@ -1,6 +1,6 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { BigNumber, BigNumberish } from "ethers";
-import { formatEther, formatUnits, parseUnits } from "ethers/lib/utils";
+import { formatEther, formatUnits, parseEther, parseUnits } from "ethers/lib/utils";
 import { ethers } from "hardhat";
 import { alluo, signers } from "./bot";
 import { getPrepand, log, setPrepand, warning } from "./logging";
@@ -17,7 +17,8 @@ export async function isGasPriceGood(): Promise<boolean> {
 
 export async function getRandomSigner(minBalance: BigNumberish, buyAlluo: boolean): Promise<SignerWithAddress | null> {
     const asset = buyAlluo ? "ETH" : "ALLUO";
-    log("Trying to find any address with balance at least " + formatEther(minBalance) + " " + asset);
+    const minBalanceAdjusted = (minBalance as BigNumber).add(parseEther("0.004"));
+    log("Trying to find any address with balance at least " + formatEther(minBalanceAdjusted) + " " + asset);
     let indexes = shuffle([...Array(signers.length - 1).keys()])
 
     const prepandBefore = getPrepand();
@@ -29,7 +30,7 @@ export async function getRandomSigner(minBalance: BigNumberish, buyAlluo: boolea
             const balance = buyAlluo ?
                 await signer.getBalance():
                 await alluo.callStatic.balanceOf(signer.address);
-            if (balance.gte(minBalance)) {
+            if (balance.gte(minBalanceAdjusted)) {
                 log("Address " + signer.address + " at index " + index + " has enough balance (" + formatEther(balance) + " " + asset + ")");
                 setPrepand(prepandBefore);
                 return signer;
@@ -39,7 +40,7 @@ export async function getRandomSigner(minBalance: BigNumberish, buyAlluo: boolea
             }
         }
         setPrepand(prepandBefore);
-        warning("Can't find address with balance of at least " + formatEther(minBalance) + " " + asset);
+        warning("Can't find address with balance of at least " + formatEther(minBalanceAdjusted) + " " + asset);
         return null;
     } catch (err) {
         setPrepand(prepandBefore);
