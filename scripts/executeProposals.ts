@@ -4,6 +4,8 @@ import { ethers } from "hardhat";
 import fetch from 'node-fetch';
 import { voteExecutorMasterAddressMainnet, voteExecutorMasterAddress } from "./common";
 
+
+
 type Proposal = {
     id: string,
     title: string,
@@ -245,6 +247,13 @@ async function getLiquidityDirectionData(proposal: Proposal, params: VoteParams)
     const veMasterInterface = await ethers.getContractAt("IVoteExecutorMaster", voteExecutorMasterAddressMainnet);
     const veMaster = new Contract(voteExecutorMasterAddressMainnet, veMasterInterface.interface, signer);
 
+    const strategyHandlerAddress = "0x385AB598E7DBF09951ba097741d2Fa573bDe94A5"
+    const strategyHandlerContract = await ethers.getContractAt("IStrategyHandler", strategyHandlerAddress);
+    const strategyHandler = new Contract(strategyHandlerAddress, strategyHandlerContract.interface, signer);
+    const activeStrategies = await strategyHandler.callStatic.getAllAssetActiveIds();
+    console.log("Current active strategies", activeStrategies)
+
+
     // Replace all votes with less than 5% with 0.
     const totalVotesCasted = proposal.scores.reduce((previousValue, currentValue) => previousValue + currentValue)
     proposal.scores = proposal.scores.map((score: number) => { return score < totalVotesCasted * 0.05 ? 0 : score; });
@@ -252,8 +261,19 @@ async function getLiquidityDirectionData(proposal: Proposal, params: VoteParams)
 
     for (let i=0; i < proposal.scores.length; i++) {
         // if (proposal.scores[i] == 0) {continue}
+        // If previously 0 and new == 0, then skip (if deployedAmount = 0 and scores ==0) 
+        // If previously non zero and new == 0, then add it.
+        let commandKeyWord = proposal.choices[i].split(" ").slice(0,2).join(" ");
+ 
+        console.log("CommandKeyword:",commandKeyWord)
+        const directionId = await strategyHandler.callStatic.getDirectionIdByName(commandKeyWord);
+        console.log("Current directionId", directionId)
+
+        if (proposal.scores[i] == 0 && !activeStrategies.includes(directionId)) {
+            console.log("Ignoring this vote...")
+            continue
+        }
         const percentage = proposal.scores[i] / newTotalVotesCasted * 10000
-        const commandKeyWord = proposal.choices[i].split(" ").slice(0,2).join(" ");
         console.log("Percentage:", percentage.toFixed(0), "commandKeyword", commandKeyWord)
 
         const data = await veMaster.callStatic.encodeLiquidityCommand(commandKeyWord, percentage.toFixed(0));
