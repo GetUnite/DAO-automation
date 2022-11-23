@@ -16,7 +16,17 @@ interface IVoteExecutorMaster {
     function encodeTreasuryAllocationChangeCommand(
         int256 _delta
     ) external returns (uint256, bytes memory);
-
+    
+    function encodeMintCommand(
+        uint256 _newMintAmount,
+        uint256 _newRewardPerDistribution
+    )
+        external
+        pure
+        returns (
+            uint256, // command index == 1
+            bytes memory // comcand
+        );
     //after vote stage
 
      function encodeApyCommand(

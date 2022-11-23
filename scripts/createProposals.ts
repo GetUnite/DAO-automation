@@ -21,6 +21,9 @@ function getInterestPerSecondParam(apyPercent: number): string {
     const decimalInterest = Math.pow(decimalApy, 1 / secondsInYear);
     return Math.round(decimalInterest * (10 ** 17)).toString();
 }
+function numberWithCommas(x:string) {
+    return x.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",");
+}
 
 async function createTreasuryVote(
     times: Times,
@@ -32,12 +35,14 @@ async function createTreasuryVote(
     const title = `Percentage of treasury invested:  ${UTCStringToRemiString(times.voteEndTime.toUTCString())} to ${UTCStringToRemiString(times.apyEndTime.toUTCString())}`;
     let body = `What should be the percentage of the treasury invested in the protocol? 
 
-The previous treasury invested in the protocol is: ${treasuryValue[0]}
-The current treasury value is: ${treasuryValue[1]}
+The previous treasury invested in the protocol is: $${numberWithCommas(treasuryValue[0].toString())}
+The current treasury value is: $${numberWithCommas(treasuryValue[1].toString())}
 
-All the yield that is generated from this position will be used to contribute ETH to the ETH-ALLUO Balancer pool.
+In the spirit of putting our money where our mouth is, this vote is asking DAO members to decide on how much of the treasury liquidity should be invested in the Alluo protocol.
 
-The more we invest the more we can generate yield and contribute ETH to the pool but it creates a risk to the protocol's treasury.
+The more we invest into our own protocol, the more yield we can generate for Voters.
+
+The liquidity will be invested in the USD farm to avoid exposure to volatile assets
 
 Parameters for contract:
 \`\`\`json
@@ -108,8 +113,8 @@ These new $ALLUO are newly minted tokens that ultimately dilute all token holder
 This vote is to agree on how many new $ALLUO tokens the DAO wants to mint to reward participants in the governance process of the next 2 weeks.
 
 To understand more read our articles here: 
-- https://blog.alluo.io/alluo-governance-a-start-c4d3cd1c2eb9
-- https://blog.alluo.io/alluo-tokenomics-e6fc83e902e9
+- https://blog.alluo.com/alluo-governance-a-start-c4d3cd1c2eb9
+- https://blog.alluo.com/alluo-tokenomics-v2-3ff53bebcf8d
 
 Parameters for contract:
 \`\`\`json
@@ -130,6 +135,10 @@ Parameters for contract:
     else {
         console.log("Using mainnet hub, space and contract");
     }
+
+    // Enable only for tests:
+    // hub = "https://testnet.snapshot.org";
+    // space = "0xtuytuy.eth";
 
     const optionsArgs = await Promise.all(
         options.map(async (x) => {
@@ -189,7 +198,7 @@ async function createLDVote(
     chainId: number,
 ) {
     const title = `[${asset}] Liquidity Direction: ${UTCStringToRemiString(times.voteEndTime.toUTCString())} to ${UTCStringToRemiString(times.apyEndTime.toUTCString())}`;
-    let body = `Liquidity direction for for all assets in the ${asset} farm with Alluo.
+    let body = `Liquidity direction for all assets in the ${asset} farm with Alluo.
 
 Each voted option will need a minimum of 5% of the total votes to be executed.
 
@@ -256,12 +265,14 @@ async function createAPYVote(
     chainId: number,
     provider: eth.providers.BaseProvider
 ) {
-    const title = `APY for the ${asset} pool: ${UTCStringToRemiString(times.voteEndTime.toUTCString())} to ${UTCStringToRemiString(times.apyEndTime.toUTCString())}`;
-    let body = `What should be the APY for the ${asset} pool?
+    const title = `Advertised APY for the ${asset} pool: ${UTCStringToRemiString(times.voteEndTime.toUTCString())} to ${UTCStringToRemiString(times.apyEndTime.toUTCString())}`;
+    let body = `What should be the advertised APY for the ${asset} pool?
 
-Note that if the spread is positive, the excess yield will be used to buy ALLUO from the balancer pool
+The Advertised APY is promised to depositors for one governance cycle. The higher the difference between the Advertised APY and the Realised APY (what we can achieve via Liquidity Direction) the more value will be redistributed to Voters.
 
-If the the spread is negative, the missing yield will need to be financed by the treasury
+The mechanism used to redistribute value to Voters has been described by the core team in this article: 
+
+- https://blog.alluo.com/alluo-tokenomics-v2-3ff53bebcf8d
 
 Parameters for contract:
 \`\`\`json
@@ -281,6 +292,9 @@ Parameters for contract:
     else {
         console.log("Using mainnet hub, space and contract");
     }
+    // Enable only for tests
+    // hub = "https://testnet.snapshot.org";
+    // space = "0xtuytuy.eth";
 
     const optionsArgs = await Promise.all(
         options.map(async (x) => {
@@ -355,6 +369,15 @@ async function main() {
     const blockDiff = 0;
     const currentBlock = await getCurrentBlock(mainnetProvider);
     const assets = await getIbAlluosAssets();
+
+    try {
+        const optionsMint = getVoteOptions(times.voteStartTime, "mintProposalOptions", "mintProposalOptions");
+
+        await createMintVote(times, optionsMint, currentBlock + blockDiff, chainId, mainnetProvider);
+
+    } catch (error) {
+        console.log(error);
+    }
 
     try {
         const optionsTreasury = getVoteOptions(times.voteStartTime, "treasuryPercentageOptions", "treasuryPercentageOptions");
