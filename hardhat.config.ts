@@ -48,14 +48,14 @@ const config: HardhatUserConfig = {
       }
     },
     mainnet: {
-      url: process.env.MAINNET_URL,
+      url: process.env.MAINNET_URL || "https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161",
       accounts: {
         mnemonic: process.env.MNEMONIC,
         count: 11
       }
     },
     goerli: {
-      url: process.env.GOERLI_URL,
+      url: process.env.GOERLI_URL || "https://goerli.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161",
       accounts: {
         mnemonic: process.env.MNEMONIC,
         count: 5
