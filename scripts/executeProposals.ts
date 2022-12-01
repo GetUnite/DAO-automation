@@ -1,4 +1,4 @@
-import { Contract, Wallet } from "ethers";
+import { BigNumber, Contract, Wallet } from "ethers";
 import { parseEther } from "ethers/lib/utils";
 import { ethers } from "hardhat";
 import fetch from 'node-fetch';
@@ -119,7 +119,6 @@ async function main() {
 
     let hub = "https://hub.snapshot.org/graphql";
     let space = "alluo.eth";
-
     if (chainId != 1) {
         console.log("Using testnet hub and space");
         hub = "https://testnet.snapshot.org/graphql";
@@ -186,17 +185,22 @@ async function main() {
                 const treasuryValuePrevious = params.value[0]
                 const treasuryValueCurrent = params.value[1]
                 const rawVoteAmount = treasuryValueCurrent * percentageAsDecimal;
+                
                 const delta = rawVoteAmount - treasuryValuePrevious;
+                console.log("Raw vote amount and prev:", rawVoteAmount, treasuryValuePrevious)
                 const data = await veMaster.callStatic.encodeTreasuryAllocationChangeCommand(parseEther(String(delta)))
-                winningParams.push({data:{cmdIndex: data[0].toString(), cmd: data[1]}, stringOption:"Treasury Vote"})
+                if (delta != 0) {
+                    winningParams.push({data:{cmdIndex: data[0].toString(), cmd: data[1]}, stringOption:"Treasury Vote"})
+                }
     
             } else {
                 const winningParam = params!.args.find((x) => x.stringOption == winningOption)!;
-                winningParams.push(winningParam);
+                if (!(winningParam.stringOption == '0 $ALLUO - 0% APR')) {
+                    winningParams.push(winningParam);
+                }
             }
 
         }
-     
     }
 
     if (winningParams.length > 0) {
@@ -251,7 +255,12 @@ async function getLiquidityDirectionData(proposal: Proposal, params: VoteParams)
     const strategyHandlerContract = await ethers.getContractAt("IStrategyHandler", strategyHandlerAddress);
     const strategyHandler = new Contract(strategyHandlerAddress, strategyHandlerContract.interface, signer);
     const activeStrategies = await strategyHandler.callStatic.getAllAssetActiveIds();
-    console.log("Current active strategies", activeStrategies)
+    let activeNumStrategies: Number[] = []
+    // Some strange behaviour with array of bignumbers. So here I cast to num.
+    activeStrategies.forEach((num: BigNumber) => {
+        activeNumStrategies.push(Number(num))
+    });
+    console.log("Current active strategies nums", activeNumStrategies)
 
 
     // Replace all votes with less than 5% with 0.
@@ -266,10 +275,9 @@ async function getLiquidityDirectionData(proposal: Proposal, params: VoteParams)
         let commandKeyWord = proposal.choices[i].split(" ").slice(0,2).join(" ");
  
         console.log("CommandKeyword:",commandKeyWord)
-        const directionId = await strategyHandler.callStatic.getDirectionIdByName(commandKeyWord);
+        const directionId = Number(await strategyHandler.callStatic.getDirectionIdByName(commandKeyWord));
         console.log("Current directionId", directionId)
-
-        if (proposal.scores[i] == 0 && !activeStrategies.includes(directionId)) {
+        if (proposal.scores[i] == 0 && !activeNumStrategies.includes(directionId)) {
             console.log("Ignoring this vote...")
             continue
         }
