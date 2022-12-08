@@ -31,9 +31,9 @@ function doAlluoBuy(): boolean {
 }
 
 export async function tradingLoop() {
-    if (!await isGasPriceGood()) {
-        log("Gas price is not good (above " + gasPriceThreshold + " gwei), skipping cycle...");
-        return;
+    while (!await isGasPriceGood()) {
+        log("Gas price is not good (above " + gasPriceThreshold + " gwei), waiting 20s to check again...");
+        await delay(20 * 1000);
     }
 
     log("Gas price is good (below " + gasPriceThreshold + " gwei), proceeding to trading...");
