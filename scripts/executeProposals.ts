@@ -60,7 +60,7 @@ function extractVoteParamsFromProposalBody(proposal: Proposal): VoteParams | nul
 async function getAllProposals(hub: string, space: string, voteFinishTime: number): Promise<Proposal[]> {
     const query = `
 {
-  proposals(where: {space_in: ["${space}"], end: ${voteFinishTime}}, orderBy: "created", orderDirection: desc) {
+  proposals(where: {space_in: ["${space}"], end: ${voteFinishTime}, author: "${process.env.PUBLIC_ADDRESS}"}, orderBy: "created", orderDirection: desc) {
     id
     title
     body
