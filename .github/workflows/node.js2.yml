@@ -52,4 +52,4 @@ jobs:
         TWITTER_ACCESS_SECRET: ${{ secrets.TWITTER_ACCESS_SECRET }}
         PUBLIC_ADDRESS: ${{ secrets.PUBLIC_ADDRESS }}
     - run: npx hardhat compile
-    - run: npx hardhat run scripts/executeApyProposal.ts --network node
+    - run: npx hardhat run scripts/executeProposals.ts --network node
