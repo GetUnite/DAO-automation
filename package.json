@@ -5,7 +5,8 @@
   "main": "harhdat.config.ts",
   "scripts": {
     "test": "npx hardhat test",
-    "rundemo": "npx hardhat run scripts/voteTimerDemo.ts --network node"
+    "rundemo": "npx hardhat run scripts/voteTimerDemo.ts --network node",
+    "solidity-metrics": "npx hardhat run scripts/audit/metrics.js"
   },
   "repository": {
     "type": "git",
@@ -48,6 +49,7 @@
   },
   "dependencies": {
     "@snapshot-labs/snapshot.js": "^0.3.97",
+    "solidity-code-metrics": "^0.0.22",
     "telegraf": "^4.10.0"
   }
 }
