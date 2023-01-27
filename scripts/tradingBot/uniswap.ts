@@ -5,7 +5,7 @@ import { ethers as hethers } from "hardhat";
 import { abi as QuoterABI } from '@uniswap/v3-periphery/artifacts/contracts/lens/Quoter.sol/Quoter.json'
 import { abi as IUniswapV3PoolABI } from '@uniswap/v3-core/artifacts/contracts/interfaces/IUniswapV3Pool.sol/IUniswapV3Pool.json'
 import { log, warning } from "./logging";
-import { formatEther, parseEther, parseUnits } from "ethers/lib/utils";
+import { formatEther, formatUnits, parseEther, parseUnits } from "ethers/lib/utils";
 import { alluo } from "./bot";
 
 interface Immutables {
@@ -115,8 +115,10 @@ export async function executeTrade(
         if (approvalAmount.lt(orderAmount)) {
             log("    Allowance is NOT enough, submitting approve tx")
             const gasLimit = await alluo.connect(signer).estimateGas.approve(router.address, constants.MaxUint256);
+            const gasPrice = (await hethers.provider.getGasPrice()).add(parseUnits("3.0", 9));
             log("    Gas limit: " + gasLimit.toNumber());
-            const tx = await alluo.connect(signer).approve(router.address, constants.MaxUint256, { gasLimit: gasLimit });
+            log("    Gas price: " + formatUnits(gasPrice, 9));
+            const tx = await alluo.connect(signer).approve(router.address, constants.MaxUint256, { gasLimit: gasLimit, gasPrice: gasPrice });
             log("    Broadcasted ALLUO approve tx: " + tx.hash);
 
             log("    Waiting for ALLUO approve tx confirmation...");
@@ -159,7 +161,9 @@ export async function executeTrade(
                 calldataUnwrap
             ]
         );
+        const gasPrice = (await hethers.provider.getGasPrice()).add(parseUnits("3.0", 9));
         log("    Gas limit: " + gasLimit.toNumber());
+        log("    Gas price: " + formatUnits(gasPrice, 9));
 
         const tx = await router.connect(signer).multicall(
             [
@@ -167,6 +171,7 @@ export async function executeTrade(
                 calldataUnwrap,
             ], {
             gasLimit: gasLimit,
+            gasPrice: gasPrice
         }
         );
 
@@ -202,12 +207,15 @@ export async function executeTrade(
         value: orderAmount,
     }
     );
+    const gasPrice = (await hethers.provider.getGasPrice()).add(parseUnits("3.0", 9));
     log("    Gas limit: " + gasLimit.toNumber());
+    log("    Gas price: " + formatUnits(gasPrice, 9));
 
     const tx = await router.connect(signer).exactInputSingle(
         params, {
         value: orderAmount,
         gasLimit: gasLimit,
+        gasPrice: gasPrice
     }
     );
     log("    Broadcasted ALLUO buy tx: " + tx.hash);
