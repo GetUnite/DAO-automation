@@ -5,8 +5,8 @@ export function delay(ms: number) {
 }
 
 export function getRandomExecutionPause(): number {
-    const min = 1020; // 17 minute
-    const max = 1920; // 32 minutes
+    const min = 9000; // 2.5 hours
+    const max = 10800; // 3 hours
 
     return randomInRange(min, max);
 }

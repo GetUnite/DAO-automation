@@ -31,13 +31,6 @@ function doAlluoBuy(): boolean {
 }
 
 export async function tradingLoop() {
-    while (!await isGasPriceGood()) {
-        log("Gas price is not good (above " + gasPriceThreshold + " gwei), waiting 20s to check again...");
-        await delay(20 * 1000);
-    }
-
-    log("Gas price is good (below " + gasPriceThreshold + " gwei), proceeding to trading...");
-
     let doAlluo = doAlluoBuy();
     let volume = await getTradeVolume(doAlluo);
     log("Coin toss: " + (doAlluo ? "buying" : "selling") + " ALLUO first, amount: " + formatEther(volume) + (doAlluo ? " ETH" : " ALLUO"));
@@ -53,6 +46,12 @@ export async function tradingLoop() {
     }
 
     log("Using address " + signerFirst.address + " to " + (doAlluo ? "buy" : "sell") + " ALLUO, amount: " + formatEther(volume) + (doAlluo ? " ETH" : " ALLUO"));
+
+    while (!await isGasPriceGood()) {
+        log("Gas price is not good (above " + gasPriceThreshold + " gwei), waiting 20s to check again...");
+        await delay(20 * 1000);
+    }
+    log("Gas price is good (below " + gasPriceThreshold + " gwei), proceeding to trading...");
 
     log("First trade:")
     const amountReturned = await executeTrade(signerFirst, doAlluo, volume);
