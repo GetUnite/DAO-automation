@@ -408,11 +408,15 @@ async function main() {
         }
     }
 
-    const tweetText = `A new governance round is live for $ALLUO lockers.
+    const tweetText = `🔥Attention $ALLUO token holders!🔥
 
-We invite all token holders to participate and benefit from the APY difference between realised APY and advertised APY.
+It's time to make your voice heard!🗣️
 
-https://vote.alluo.com/`;
+Vote where to invest deposits and reap the rewards from the difference in realised APY and what is paid to depositors!💰
+
+Vote now at https://vote.alluo.com/
+
+#ALLUO #liquiditydirection #governance`;
 
     await tweet([tweetText]);
 }
