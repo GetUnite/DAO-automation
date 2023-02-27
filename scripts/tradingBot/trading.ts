@@ -12,7 +12,7 @@ let ethVolume = BigNumber.from(0);
 
 async function getTradeVolume(doAlluo: boolean): Promise<BigNumber> {
     const min = 63300000000000; // 0.633 ETH
-    const max = 189885000000000; // 1.89885 ETH
+    const max = 50000000000000; // 0.5 ETH
 
     const ethValue = BigNumber.from(randomInRange(min, max)).mul("10000");
 
@@ -26,8 +26,9 @@ async function getTradeVolume(doAlluo: boolean): Promise<BigNumber> {
 }
 
 function doAlluoBuy(): boolean {
-    // 50-50 chance to buy or sell ALLUO first
-    return randomInRange(0, 1) == 1 ? true : false;
+    // currently hardcoded to always do $ALLUO buy first
+    return true;
+    // return randomInRange(0, 1) == 1 ? true : false;
 }
 
 export async function tradingLoop() {

@@ -1,3 +1,5 @@
+import { delay } from "./timing";
+
 export function randomInRange(min: number, max: number) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
@@ -19,3 +21,11 @@ export function shuffle<T>(array: T[]): T[] {
   
     return array;
 };
+
+export async function executeWithTimeout(action: () => Promise<boolean>, timeoutMs: number): Promise<boolean> {
+    const timeoutAction = async () => {
+        await delay(timeoutMs);
+        return false;
+    }
+    return await Promise.race([action(), timeoutAction()])
+}

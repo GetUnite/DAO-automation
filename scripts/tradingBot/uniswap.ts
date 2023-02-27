@@ -1,5 +1,5 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { BigNumber, constants, ethers } from "ethers";
+import { BigNumber, constants, ContractReceipt, ethers } from "ethers";
 import { ethers as hethers } from "hardhat";
 
 import { abi as QuoterABI } from '@uniswap/v3-periphery/artifacts/contracts/lens/Quoter.sol/Quoter.json'
@@ -7,6 +7,7 @@ import { abi as IUniswapV3PoolABI } from '@uniswap/v3-core/artifacts/contracts/i
 import { log, warning } from "./logging";
 import { formatEther, formatUnits, parseEther, parseUnits } from "ethers/lib/utils";
 import { alluo } from "./bot";
+import { executeWithTimeout } from "./tools";
 
 interface Immutables {
     factory: string
@@ -116,14 +117,21 @@ export async function executeTrade(
             log("    Allowance is NOT enough, submitting approve tx")
             const gasLimit = await alluo.connect(signer).estimateGas.approve(router.address, constants.MaxUint256);
             const gasPrice = (await hethers.provider.getGasPrice()).add(parseUnits("3.0", 9));
+            const nonce = await signer.getTransactionCount();
             log("    Gas limit: " + gasLimit.toNumber());
             log("    Gas price: " + formatUnits(gasPrice, 9));
-            const tx = await alluo.connect(signer).approve(router.address, constants.MaxUint256, { gasLimit: gasLimit, gasPrice: gasPrice });
-            log("    Broadcasted ALLUO approve tx: " + tx.hash);
+            log("    Nonce: " + nonce);
+            while (!await executeWithTimeout(async () => {
+                const tx = await alluo.connect(signer).approve(router.address, constants.MaxUint256, { gasLimit: gasLimit, gasPrice: gasPrice, nonce: nonce });
+                log("    Broadcasted ALLUO approve tx: " + tx.hash);
 
-            log("    Waiting for ALLUO approve tx confirmation...");
-            await tx.wait();
-            log("    ALLUO approve tx confirmed");
+                log("    Waiting for ALLUO approve tx confirmation...");
+                await tx.wait();
+                log("    ALLUO approve tx confirmed");
+                return true;
+            }, 360000)) {
+                log("    Timeout in ALLUO approve detected, sending same tx again");
+            }
         } else {
             log("    ALLUO allowance is enough")
         }
@@ -162,26 +170,35 @@ export async function executeTrade(
             ]
         );
         const gasPrice = (await hethers.provider.getGasPrice()).add(parseUnits("3.0", 9));
+        const nonce = await signer.getTransactionCount();
         log("    Gas limit: " + gasLimit.toNumber());
         log("    Gas price: " + formatUnits(gasPrice, 9));
+        log("    Nonce: " + nonce);
 
-        const tx = await router.connect(signer).multicall(
-            [
-                calldataSwap,
-                calldataUnwrap,
-            ], {
-            gasLimit: gasLimit,
-            gasPrice: gasPrice
-        }
-        );
+        let txReceipt: ContractReceipt;
+        while (!await executeWithTimeout(async () => {
+            const tx = await router.connect(signer).multicall(
+                [
+                    calldataSwap,
+                    calldataUnwrap,
+                ], {
+                gasLimit: gasLimit,
+                gasPrice: gasPrice,
+                nonce: nonce
+            }
+            );
+    
+            log("    Broadcasted ALLUO sell tx: " + tx.hash);
+            log("    Waiting for ALLUO sell tx confirmation...");
+    
+            txReceipt = await tx.wait();
+            log("    ALLUO sell tx confirmed");
+            return true;
+        }, 360000)) {
+            log("    Timeout in ALLUO sell detected, sending same tx again");
+        };
 
-        log("    Broadcasted ALLUO sell tx: " + tx.hash);
-        log("    Waiting for ALLUO sell tx confirmation...");
-
-        const txReceipt = await tx.wait();
-        log("    ALLUO sell tx confirmed");
-
-        const txFee = txReceipt.gasUsed.mul(txReceipt.effectiveGasPrice);
+        const txFee = txReceipt!.gasUsed.mul(txReceipt!.effectiveGasPrice);
         const etherBalanceAfter = await signer.getBalance();
         const purchasedAmount = etherBalanceAfter.sub(etherBalanceBefore).add(txFee);
 
@@ -208,26 +225,35 @@ export async function executeTrade(
     }
     );
     const gasPrice = (await hethers.provider.getGasPrice()).add(parseUnits("3.0", 9));
+    const nonce = await signer.getTransactionCount();
     log("    Gas limit: " + gasLimit.toNumber());
     log("    Gas price: " + formatUnits(gasPrice, 9));
+    log("    Nonce: " + nonce);
 
-    const tx = await router.connect(signer).exactInputSingle(
-        params, {
-        value: orderAmount,
-        gasLimit: gasLimit,
-        gasPrice: gasPrice
+    let purchasedAmount = BigNumber.from("0");
+    while (!await executeWithTimeout(async () => {
+        const tx = await router.connect(signer).exactInputSingle(
+            params, {
+            value: orderAmount,
+            gasLimit: gasLimit,
+            gasPrice: gasPrice,
+            nonce: nonce
+        }
+        );
+        log("    Broadcasted ALLUO buy tx: " + tx.hash);
+        log("    Waiting for ALLUO buy tx confirmation...");
+
+        await tx.wait();
+        log("    ALLUO buy tx confirmed");
+    
+        const alluoAmountAfter = await alluo.balanceOf(signer.address);
+        purchasedAmount = alluoAmountAfter.sub(alluoAmountBefore);
+    
+        log("    Address " + signer.address + " bought " + formatEther(purchasedAmount) + " ALLUO for " + formatEther(orderAmount) + " ETH");
+        return true;
+    }, 360000)) {
+        log("    Timeout in ALLUO buy detected, sending same tx again");
     }
-    );
-    log("    Broadcasted ALLUO buy tx: " + tx.hash);
-    log("    Waiting for ALLUO buy tx confirmation...");
-
-    await tx.wait();
-    log("    ALLUO buy tx confirmed");
-
-    const alluoAmountAfter = await alluo.balanceOf(signer.address);
-    const purchasedAmount = alluoAmountAfter.sub(alluoAmountBefore);
-
-    log("    Address " + signer.address + " bought " + formatEther(purchasedAmount) + " ALLUO for " + formatEther(orderAmount) + " ETH");
 
     return purchasedAmount;
 }
