@@ -42,7 +42,8 @@ async function main() {
         } catch (err) {
             error("Error in trading cycle");
             console.log("\n", err, "\n");
-            error("Unsuccessful cycle, restarting");
+            error("Unsuccessful cycle, restarting in 5 minutes");
+            await delay(300000);
             continue;
         }
 

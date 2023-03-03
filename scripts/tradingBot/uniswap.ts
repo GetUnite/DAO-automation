@@ -116,12 +116,17 @@ export async function executeTrade(
         if (approvalAmount.lt(orderAmount)) {
             log("    Allowance is NOT enough, submitting approve tx")
             const gasLimit = await alluo.connect(signer).estimateGas.approve(router.address, constants.MaxUint256);
-            const gasPrice = (await hethers.provider.getGasPrice()).add(parseUnits("3.0", 9));
             const nonce = await signer.getTransactionCount();
             log("    Gas limit: " + gasLimit.toNumber());
-            log("    Gas price: " + formatUnits(gasPrice, 9));
             log("    Nonce: " + nonce);
             while (!await executeWithTimeout(async () => {
+                if (await signer.getTransactionCount() > nonce) {
+                    return true;
+                }
+                
+                const gasPrice = (await hethers.provider.getGasPrice()).add(parseUnits("3.0", 9));
+                log("    Gas price: " + formatUnits(gasPrice, 9));
+
                 const tx = await alluo.connect(signer).approve(router.address, constants.MaxUint256, { gasLimit: gasLimit, gasPrice: gasPrice, nonce: nonce });
                 log("    Broadcasted ALLUO approve tx: " + tx.hash);
 
@@ -169,14 +174,19 @@ export async function executeTrade(
                 calldataUnwrap
             ]
         );
-        const gasPrice = (await hethers.provider.getGasPrice()).add(parseUnits("3.0", 9));
         const nonce = await signer.getTransactionCount();
         log("    Gas limit: " + gasLimit.toNumber());
-        log("    Gas price: " + formatUnits(gasPrice, 9));
         log("    Nonce: " + nonce);
 
         let txReceipt: ContractReceipt;
         while (!await executeWithTimeout(async () => {
+            if (await signer.getTransactionCount() > nonce) {
+                return true;
+            }
+
+            const gasPrice = (await hethers.provider.getGasPrice()).add(parseUnits("3.0", 9));
+            log("    Gas price: " + formatUnits(gasPrice, 9));
+
             const tx = await router.connect(signer).multicall(
                 [
                     calldataSwap,
@@ -224,14 +234,19 @@ export async function executeTrade(
         value: orderAmount,
     }
     );
-    const gasPrice = (await hethers.provider.getGasPrice()).add(parseUnits("3.0", 9));
     const nonce = await signer.getTransactionCount();
     log("    Gas limit: " + gasLimit.toNumber());
-    log("    Gas price: " + formatUnits(gasPrice, 9));
     log("    Nonce: " + nonce);
 
     let purchasedAmount = BigNumber.from("0");
     while (!await executeWithTimeout(async () => {
+        if (await signer.getTransactionCount() > nonce) {
+            return true;
+        }
+
+        const gasPrice = (await hethers.provider.getGasPrice()).add(parseUnits("3.0", 9));
+        log("    Gas price: " + formatUnits(gasPrice, 9));
+
         const tx = await router.connect(signer).exactInputSingle(
             params, {
             value: orderAmount,
@@ -246,14 +261,15 @@ export async function executeTrade(
         await tx.wait();
         log("    ALLUO buy tx confirmed");
     
-        const alluoAmountAfter = await alluo.balanceOf(signer.address);
-        purchasedAmount = alluoAmountAfter.sub(alluoAmountBefore);
-    
-        log("    Address " + signer.address + " bought " + formatEther(purchasedAmount) + " ALLUO for " + formatEther(orderAmount) + " ETH");
         return true;
     }, 360000)) {
         log("    Timeout in ALLUO buy detected, sending same tx again");
     }
+
+    const alluoAmountAfter = await alluo.balanceOf(signer.address);
+    purchasedAmount = alluoAmountAfter.sub(alluoAmountBefore);
+
+    log("    Address " + signer.address + " bought " + formatEther(purchasedAmount) + " ALLUO for " + formatEther(orderAmount) + " ETH");
 
     return purchasedAmount;
 }
