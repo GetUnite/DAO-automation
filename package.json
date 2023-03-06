@@ -4,7 +4,7 @@
   "description": "Automation tools for Alluo governance",
   "main": "harhdat.config.ts",
   "scripts": {
-    "build" : "cd scripts/curve-analytics && npm install && tsc",
+    "build": "cd scripts/curve-analytics && npm install && tsc",
     "test": "npx hardhat test",
     "rundemo": "npx hardhat run scripts/voteTimerDemo.ts --network node"
   },
@@ -32,9 +32,10 @@
     "@typechain/hardhat": "^2.3.1",
     "@types/chai": "^4.3.1",
     "@types/mocha": "^9.1.1",
-    "@types/node": "^17.0.40",
+    "@types/node": "^17.0.45",
     "@uniswap/sdk-core": "^3.1.0",
     "@uniswap/v3-sdk": "^3.9.0",
+    "aws-cdk": "2.66.1",
     "chai": "^4.3.6",
     "dotenv": "^16.0.1",
     "ethereum-waffle": "^3.4.4",
@@ -42,17 +43,17 @@
     "hardhat": "^2.9.7",
     "hardhat-gas-reporter": "^1.0.8",
     "solidity-coverage": "^0.7.21",
-    "ts-node": "^10.8.1",
+    "ts-node": "^10.9.1",
     "twitter-api-v2": "^1.12.2",
     "typechain": "^5.2.0",
-    "aws-cdk": "2.66.1",
-    "typescript": "^4.7.3"
+    "typescript": "^4.9.5"
   },
   "dependencies": {
     "@snapshot-labs/snapshot.js": "^0.3.97",
     "aws-cdk-lib": "^2.66.1",
-    "telegraf": "^4.10.0",
     "constructs": "^10.0.0",
-    "source-map-support": "^0.5.21"
+    "googleapis": "^112.0.0",
+    "source-map-support": "^0.5.21",
+    "telegraf": "^4.10.0"
   }
 }

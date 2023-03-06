@@ -21,7 +21,10 @@ export class CurveAnalyticsStack extends cdk.Stack {
       handler: 'index.main',
       code: lambda.Code.fromAsset('scripts/curve-analytics'),
       environment: {
-        MAINNET_URL: process.env.MAINNET_URL as string
+        MAINNET_URL: process.env.MAINNET_URL as string,
+        GOOGLE_APIS_CLIENT_EMAIL: process.env.GOOGLE_APIS_CLIENT_EMAIL as string,
+        GOOGLE_APIS_PRIVATE_KEY: process.env.GOOGLE_APIS_PRIVATE_KEY as string,
+        GOOGLE_APIS_SHEET_ID: process.env.GOOGLE_APIS_SHEET_ID as string,
       },
     });
 
