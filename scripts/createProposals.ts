@@ -21,7 +21,7 @@ function getInterestPerSecondParam(apyPercent: number): string {
     const decimalInterest = Math.pow(decimalApy, 1 / secondsInYear);
     return Math.round(decimalInterest * (10 ** 17)).toString();
 }
-function numberWithCommas(x:string) {
+function numberWithCommas(x: string) {
     return x.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",");
 }
 
@@ -70,7 +70,7 @@ Parameters for contract:
         args: options,
         value: treasuryValue
     }, null, 4) + "\n```";
-    
+
     const discussion = "https://discord.gg/jNaQF6sMxf";
     const plugins = JSON.stringify({});
     const type = "quadratic";
@@ -355,11 +355,11 @@ async function main() {
     let timerInterface = (await ethers.getContractAt("VoteTimer", voteExecutorMasterAddressMainnet)).interface;
     let timer = new Contract("0xA27082C3334628C306ba022b1E6e2A9CA92e558f", timerInterface, timerProvider);
 
-    if (!await timer.canExecute2WeekVote()) {
-        console.log("Timer says that it is not time to create votes, exiting...");
-        return;
-    }
-    console.log("Timer says that it is time to create votes");
+    // if (!await timer.canExecute2WeekVote()) {
+    //     console.log("Timer says that it is not time to create votes, exiting...");
+    //     return;
+    // }
+    // console.log("Timer says that it is time to create votes");
 
     const voteStartHour = Number.parseInt(process.env.APY_VOTE_START_HOUR as string);
     const voteLengthSeconds = Number.parseInt(process.env.APY_VOTE_LENGTH_MSECONDS as string);
@@ -371,18 +371,18 @@ async function main() {
     const assets = await getIbAlluosAssets();
 
     try {
-        const optionsMint = getVoteOptions(times.voteStartTime, "mintProposalOptions", "mintProposalOptions");
+        // const optionsMint = getVoteOptions(times.voteStartTime, "mintProposalOptions", "mintProposalOptions");
 
-        await createMintVote(times, optionsMint, currentBlock + blockDiff, chainId, mainnetProvider);
+        // await createMintVote(times, optionsMint, currentBlock + blockDiff, chainId, mainnetProvider);
 
     } catch (error) {
         console.log(error);
     }
 
     try {
-        const optionsTreasury = getVoteOptions(times.voteStartTime, "treasuryPercentageOptions", "treasuryPercentageOptions");
+        // const optionsTreasury = getVoteOptions(times.voteStartTime, "treasuryPercentageOptions", "treasuryPercentageOptions");
 
-        await createTreasuryVote(times, optionsTreasury[1], optionsTreasury[0], currentBlock + blockDiff, chainId);
+        // await createTreasuryVote(times, optionsTreasury[1], optionsTreasury[0], currentBlock + blockDiff, chainId);
 
     } catch (error) {
         console.log(error);
@@ -392,17 +392,17 @@ async function main() {
         const asset = assets[i];
 
         try {
-            const optionsApy = getVoteOptions(times.voteStartTime, "apyProposalOptions_" + asset.asset, "apyProposalOptions");
+            // const optionsApy = getVoteOptions(times.voteStartTime, "apyProposalOptions_" + asset.asset, "apyProposalOptions");
 
-            await createAPYVote(times, asset.asset, asset.symbol, optionsApy, currentBlock + blockDiff, chainId, mainnetProvider);
+            // await createAPYVote(times, asset.asset, asset.symbol, optionsApy, currentBlock + blockDiff, chainId, mainnetProvider);
         } catch (error) {
             console.log(error);
         }
 
         try {
-            const optionsLd = getVoteOptions(times.voteStartTime, "liquidityDirectionOptions_" + asset.asset, "liquidityDirectionOptions");
-
-            await createLDVote(times, asset.asset, optionsLd, currentBlock + blockDiff, chainId);
+            const optionsLd = await getVoteOptions(times.voteStartTime, "liquidityDirectionOptions_" + asset.asset, "liquidityDirectionOptions");
+            // break;
+            // await createLDVote(times, asset.asset, optionsLd, currentBlock + blockDiff, chainId);
         } catch (error) {
             console.log(error);
         }
@@ -418,7 +418,7 @@ Vote now at https://vote.alluo.com/
 
 #ALLUO #liquiditydirection #governance`;
 
-    await tweet([tweetText]);
+    // await tweet([tweetText]);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

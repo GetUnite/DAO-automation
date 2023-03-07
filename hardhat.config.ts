@@ -29,7 +29,7 @@ const config: HardhatUserConfig = {
     hardhat: {
       forking: {
         enabled: true,
-        url: process.env.MAINNET_URL || ""
+        url: process.env.NODE_URL || ""
       },
       accounts: {
         count: 11
