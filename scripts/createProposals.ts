@@ -380,9 +380,23 @@ async function main() {
     }
 
     try {
-        // const optionsTreasury = getVoteOptions(times.voteStartTime, "treasuryPercentageOptions", "treasuryPercentageOptions");
-
+        const optionsTreasury = await getVoteOptions(times.voteStartTime, "treasuryPercentageOptions", "treasuryPercentageOptions");
         // await createTreasuryVote(times, optionsTreasury[1], optionsTreasury[0], currentBlock + blockDiff, chainId);
+
+        // Need to add:
+        // Total Gnosis wallet balance in usd
+        // Total gnosis balanceo f alluo pool ---> 50% of alluo pool value and set alluo tokens to 0
+        // Total liquidity direction value  now
+        // Total value of all buffer contracts
+
+        // Subtract 
+        // Total iballuousd and stiballuousd funds customer
+        // total iballuoeth funds customers
+        // total iballuobtc funds customer
+        // total iballuoeur funds customer
+
+        // === total treasury value today
+        // Total treasuiry value deployed = previous week's allocation % * previous week treasury size
 
     } catch (error) {
         console.log(error);
