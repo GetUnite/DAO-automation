@@ -351,11 +351,11 @@ async function main() {
     let timerInterface = (await ethers.getContractAt("VoteTimer", voteExecutorMasterAddressMainnet)).interface;
     let timer = new Contract("0xA27082C3334628C306ba022b1E6e2A9CA92e558f", timerInterface, timerProvider);
 
-    // if (!await timer.canExecute2WeekVote()) {
-    //     console.log("Timer says that it is not time to create votes, exiting...");
-    //     return;
-    // }
-    // console.log("Timer says that it is time to create votes");
+    if (!await timer.canExecute2WeekVote()) {
+        console.log("Timer says that it is not time to create votes, exiting...");
+        return;
+    }
+    console.log("Timer says that it is time to create votes");
 
     const voteStartHour = Number.parseInt(process.env.APY_VOTE_START_HOUR as string);
     const voteLengthSeconds = Number.parseInt(process.env.APY_VOTE_LENGTH_MSECONDS as string);
@@ -417,7 +417,7 @@ Vote now at https://vote.alluo.com/
 
 #ALLUO #liquiditydirection #governance`;
 
-    // await tweet([tweetText]);
+    await tweet([tweetText]);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

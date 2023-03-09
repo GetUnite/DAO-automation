@@ -4,7 +4,7 @@ import fs from 'fs';
 import Twitter from "twitter-api-v2";
 import fetch from 'node-fetch';
 import { calculateReturns } from "./grabConvexAPY";
-import { calculateTotalBalances, calculateUserFunds } from "./getTotalBalances";
+import { calculateBoosterFunds, calculateTotalBalances, calculateUserFunds } from "./getTotalBalances";
 import { getBufferAmountsPolygon, getTotalLiquidityDirectionValue } from "./getLiquidityDirectionValues";
 
 export const voteExecutorMasterAddress = "0x82e568C482dF2C833dab0D38DeB9fb01777A9e89";
@@ -144,6 +144,9 @@ export async function getVoteOptions(voteDate: Date, optionsType: string, folder
         // Total gnosis balanceo f alluo pool ---> only ETH part of alluo pool and set alluo tokens to 0
         treasuryValueToday += await calculateTotalBalances(["0x1F020A4943EB57cd3b2213A66b355CB662Ea43C3", "0x2580f9954529853Ca5aC5543cE39E9B5B1145135"]);
 
+        // Total gnosis balances inside booster pools
+        treasuryValueToday += await calculateBoosterFunds("0x1F020A4943EB57cd3b2213A66b355CB662Ea43C3")
+
         let totalLiquidityDirectionValue = await getTotalLiquidityDirectionValue()
         // Total liquidity direction value  now
         treasuryValueToday += totalLiquidityDirectionValue
@@ -222,7 +225,7 @@ export function getTimes(voteStartHour: number, voteLengthSeconds: number, voteE
     let voteStartTime = new Date(cloneDate(currentTime).setUTCHours(voteStartHour, 0, 0, 0));
     // Only use the below for manual runs
     // voteStartTime = currentTime
-    // search for next Wednesday
+    // // search for next Wednesday
     while (voteStartTime.getDay() != 3) {
         voteStartTime.setUTCDate(
             voteStartTime.getUTCDate() + 1

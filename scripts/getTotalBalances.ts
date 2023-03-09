@@ -4,6 +4,8 @@ import { reset } from "@nomicfoundation/hardhat-network-helpers";
 import { BigNumber } from "ethers";
 import { tickToPrice } from "@uniswap/v3-sdk";
 import { Token } from "@uniswap/sdk-core";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+
 
 let tokensToCheckMainnet = [
     "0xdac17f958d2ee523a2206206994597c13d831ec7", // USDT
@@ -67,6 +69,23 @@ export async function calculateUserFunds(): Promise<number> {
     return finalValue;
 }
 
+export async function calculateBoosterFunds(address: string): Promise<number> {
+    await reset(process.env.NODE_URL)
+    let boostersToCheck = ["0x1EE566Fd6918101C578a1d2365d632ED39BEd740", "0xcB9e36cD1A0eD9c98Db76d1619e649A7a032F271"]
+    let finalValue = 0;
+    let impersonatedAddress = await ethers.getSigner(address);
+
+    for (let boosterAddress of boostersToCheck) {
+        let booster = await ethers.getContractAt("IAlluoVaultUpgradeable", boosterAddress);
+        let balance = await booster.balanceOf(address);
+        let usdcBalance = await booster.connect(impersonatedAddress).callStatic.withdrawToNonLp(balance, address, address, "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48");
+        console.log("USDC balance if withdrawn", Number(usdcBalance) / (10 ** 6));
+        let usdcPrice = await getTokenPrice("0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", "ethereum")
+        finalValue += usdcPrice * Number(usdcBalance) / (10 ** 6);
+    }
+    console.log(finalValue)
+    return finalValue;
+}
 async function checkMainnetBalances(tokenArray: string[], account: string): Promise<number> {
     await reset(process.env.NODE_URL)
     let totalBalance = 0
