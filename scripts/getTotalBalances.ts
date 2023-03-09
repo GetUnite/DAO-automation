@@ -32,6 +32,41 @@ export async function calculateTotalBalances(accounts: string[]): Promise<number
     return mainnetTotalBalanceInUSD + polygonTotalBalanceInUSD
 }
 
+export async function calculateUserFunds(): Promise<number> {
+    await reset(process.env.POLYGON_URL)
+
+    let liquidityHandler = await ethers.getContractAt("ILiquidityHandler", "0x31a3439Ac7E6Ea7e0C0E4b846F45700c6354f8c1")
+    let iballuoAddresses = await liquidityHandler.getListOfIbAlluos();
+    let finalValue = 0;
+    for (let iballuoAddress of iballuoAddresses) {
+        let iballuo = await ethers.getContractAt("IIbAlluo", iballuoAddress);
+        let primaryToken = (await iballuo.getListSupportedTokens())[0]
+        let primaryTokenPrice = await getTokenPrice(primaryToken, "polygon-pos")
+
+        let totalValueLocked = await iballuo.totalAssetSupply();
+
+        let gnosisBalance = await iballuo.balanceOf("0x2580f9954529853ca5ac5543ce39e9b5b1145135");
+        let valueHeldByGnosis = await iballuo.convertToAssetValue(gnosisBalance);
+
+        let superToken = await iballuo.superToken();
+        let superTokenBalance = await iballuo.balanceOf(superToken);
+        let valueHeldBySuperToken = await iballuo.convertToAssetValue(superTokenBalance);
+
+        let streamableToken = await ethers.getContractAt("IERC20Metadata", superToken);
+
+        let totalSupplyStreamable = await streamableToken.totalSupply();
+        let totalValueStreamable = await iballuo.convertToAssetValue(totalSupplyStreamable);
+
+        let gnosisBalanceStreamable = await streamableToken.balanceOf("0x2580f9954529853ca5ac5543ce39e9b5b1145135");
+        let gnosisValueStreamable = await iballuo.convertToAssetValue(gnosisBalanceStreamable);
+
+        let totalAssetCustomerFunds = Number(totalValueLocked) - Number(valueHeldByGnosis) - Number(valueHeldBySuperToken) + Number(totalValueStreamable) + Number(gnosisValueStreamable);
+        console.log("IbAlluo:", await iballuo.name(), "Total asset customer funds:", totalAssetCustomerFunds / (10 ** 18));
+        finalValue += primaryTokenPrice * totalAssetCustomerFunds / (10 ** 18);
+    }
+    return finalValue;
+}
+
 async function checkMainnetBalances(tokenArray: string[], account: string): Promise<number> {
     await reset(process.env.NODE_URL)
     let totalBalance = 0

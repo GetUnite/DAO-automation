@@ -4,10 +4,10 @@ import fs from 'fs';
 import Twitter from "twitter-api-v2";
 import fetch from 'node-fetch';
 import { calculateReturns } from "./grabConvexAPY";
-import { calculateTotalBalances } from "./getTotalBalances";
+import { calculateTotalBalances, calculateUserFunds } from "./getTotalBalances";
 import { getBufferAmountsPolygon, getTotalLiquidityDirectionValue } from "./getLiquidityDirectionValues";
 
-export const voteExecutorMasterAddress = "0x696d4EF7df862dFff9Af326DeFa03883CAc1b2bD";
+export const voteExecutorMasterAddress = "0x82e568C482dF2C833dab0D38DeB9fb01777A9e89";
 export const voteExecutorMasterAddressMainnet = "0x82e568C482dF2C833dab0D38DeB9fb01777A9e89";
 
 export type Times = {
@@ -138,25 +138,30 @@ export async function getVoteOptions(voteDate: Date, optionsType: string, folder
         console.log("json after", json)
     }
     else if (folder == "treasuryPercentageOptions") {
-        let treasuryValue = 0;
+        let treasuryValueToday = 0;
 
         // Total Gnosis wallet balance in usd
         // Total gnosis balanceo f alluo pool ---> only ETH part of alluo pool and set alluo tokens to 0
-        treasuryValue += await calculateTotalBalances(["0x1F020A4943EB57cd3b2213A66b355CB662Ea43C3", "0x2580f9954529853Ca5aC5543cE39E9B5B1145135"]);
+        treasuryValueToday += await calculateTotalBalances(["0x1F020A4943EB57cd3b2213A66b355CB662Ea43C3", "0x2580f9954529853Ca5aC5543cE39E9B5B1145135"]);
 
+        let totalLiquidityDirectionValue = await getTotalLiquidityDirectionValue()
         // Total liquidity direction value  now
-        treasuryValue += await getTotalLiquidityDirectionValue()
+        treasuryValueToday += totalLiquidityDirectionValue
         // Total value of all buffer contracts
-        treasuryValue += await getBufferAmountsPolygon()
-        console.log("Inflated estimate of treasury value before deductions", treasuryValue);
-        // Subtract 
-        // Total iballuousd and stiballuousd funds customer
-        // total iballuoeth funds customers
-        // total iballuobtc funds customer
-        // total iballuoeur funds customer
+        treasuryValueToday += await getBufferAmountsPolygon()
+        console.log("Inflated estimate of treasury value before deductions", treasuryValueToday);
 
-        // === total treasury value today
-        // Total treasuiry value deployed = previous week's allocation % * previous week treasury size
+        // Subtract all user funds
+        let totalCustomerFunds = await calculateUserFunds()
+        console.log("Total customer funds", totalCustomerFunds);
+
+        treasuryValueToday -= totalCustomerFunds;
+        console.log("Final estimate of treasury value today", treasuryValueToday);
+
+        let treasuryValueCurrentlyDeployed = totalLiquidityDirectionValue - totalCustomerFunds;
+        console.log("TOtal treasury value currently deployed", treasuryValueCurrentlyDeployed);
+        json.push([treasuryValueCurrentlyDeployed.toFixed(0), treasuryValueToday.toFixed(0)])
+        console.log("json after", json);
     }
     return json;
 }

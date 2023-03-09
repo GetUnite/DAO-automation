@@ -1,3 +1,4 @@
+import { reset } from "@nomicfoundation/hardhat-network-helpers";
 import snapshot from "@snapshot-labs/snapshot.js";
 import { Contract, ethers as eth, Wallet } from "ethers";
 import { formatUnits, parseUnits } from "ethers/lib/utils";
@@ -60,9 +61,6 @@ Parameters for contract:
         console.log("Using mainnet hub, space and contract");
     }
 
-    // Enable only for tests
-    // hub = "https://testnet.snapshot.org";
-    // space = "0xtuytuy.eth";
 
     const proposalType = "Treasury Vote"
     body += JSON.stringify({
@@ -129,6 +127,7 @@ Parameters for contract:
         console.log("Using testnet hub and space");
         hub = "https://testnet.snapshot.org";
         space = "0xtuytuy.eth";
+
         veMasterInterface = (await ethers.getContractAt("IVoteExecutorMaster", voteExecutorMasterAddress)).interface;
         veMaster = new Contract(voteExecutorMasterAddress, veMasterInterface, provider);
     }
@@ -136,9 +135,7 @@ Parameters for contract:
         console.log("Using mainnet hub, space and contract");
     }
 
-    // Enable only for tests:
-    // hub = "https://testnet.snapshot.org";
-    // space = "0xtuytuy.eth";
+
 
     const optionsArgs = await Promise.all(
         options.map(async (x) => {
@@ -213,14 +210,12 @@ Parameters for contract:
         console.log("Using testnet hub and space");
         hub = "https://testnet.snapshot.org";
         space = "0xtuytuy.eth";
+
     }
     else {
         console.log("Using mainnet hub, space and contract");
     }
 
-    // Enable only for tests
-    // hub = "https://testnet.snapshot.org";
-    // space = "0xtuytuy.eth";
 
 
     const proposalType = "Liquidity Direction Vote"
@@ -292,9 +287,7 @@ Parameters for contract:
     else {
         console.log("Using mainnet hub, space and contract");
     }
-    // Enable only for tests
-    // hub = "https://testnet.snapshot.org";
-    // space = "0xtuytuy.eth";
+
 
     const optionsArgs = await Promise.all(
         options.map(async (x) => {
@@ -349,7 +342,10 @@ Parameters for contract:
 async function main() {
     // used for snapshot, voteExecutorMaster call, getting timestamps
     const mainnetProvider = ethers.getDefaultProvider(process.env.NODE_URL as string);
-    const chainId = (await mainnetProvider.getNetwork()).chainId;
+    let chainId = (await mainnetProvider.getNetwork()).chainId;
+
+    // For testing
+    // chainId = 99999
 
     const timerProvider = ethers.getDefaultProvider(process.env.POLYGON_URL as string);
     let timerInterface = (await ethers.getContractAt("VoteTimer", voteExecutorMasterAddressMainnet)).interface;
@@ -367,13 +363,18 @@ async function main() {
 
     const times = getTimes(voteStartHour, voteLengthSeconds, voteEffectLengthSeconds);
     const blockDiff = 0;
-    const currentBlock = await getCurrentBlock(mainnetProvider);
+
+    let currentBlock = await getCurrentBlock(mainnetProvider);
+    if (chainId == 99999) {
+        currentBlock = await getCurrentBlock(ethers.getDefaultProvider(process.env.TEST_URL));
+    }
     const assets = await getIbAlluosAssets();
 
-    try {
-        // const optionsMint = getVoteOptions(times.voteStartTime, "mintProposalOptions", "mintProposalOptions");
 
-        // await createMintVote(times, optionsMint, currentBlock + blockDiff, chainId, mainnetProvider);
+    try {
+        const optionsMint = await getVoteOptions(times.voteStartTime, "mintProposalOptions", "mintProposalOptions");
+
+        await createMintVote(times, optionsMint, currentBlock + blockDiff, chainId, mainnetProvider);
 
     } catch (error) {
         console.log(error);
@@ -381,22 +382,7 @@ async function main() {
 
     try {
         const optionsTreasury = await getVoteOptions(times.voteStartTime, "treasuryPercentageOptions", "treasuryPercentageOptions");
-        // await createTreasuryVote(times, optionsTreasury[1], optionsTreasury[0], currentBlock + blockDiff, chainId);
-
-        // Need to add:
-        // Total Gnosis wallet balance in usd
-        // Total gnosis balanceo f alluo pool ---> 50% of alluo pool value and set alluo tokens to 0
-        // Total liquidity direction value  now
-        // Total value of all buffer contracts
-
-        // Subtract 
-        // Total iballuousd and stiballuousd funds customer
-        // total iballuoeth funds customers
-        // total iballuobtc funds customer
-        // total iballuoeur funds customer
-
-        // === total treasury value today
-        // Total treasuiry value deployed = previous week's allocation % * previous week treasury size
+        await createTreasuryVote(times, optionsTreasury[1], optionsTreasury[0], currentBlock + blockDiff, chainId);
 
     } catch (error) {
         console.log(error);
@@ -406,17 +392,16 @@ async function main() {
         const asset = assets[i];
 
         try {
-            // const optionsApy = getVoteOptions(times.voteStartTime, "apyProposalOptions_" + asset.asset, "apyProposalOptions");
+            const optionsApy = await getVoteOptions(times.voteStartTime, "apyProposalOptions_" + asset.asset, "apyProposalOptions");
 
-            // await createAPYVote(times, asset.asset, asset.symbol, optionsApy, currentBlock + blockDiff, chainId, mainnetProvider);
+            await createAPYVote(times, asset.asset, asset.symbol, optionsApy, currentBlock + blockDiff, chainId, mainnetProvider);
         } catch (error) {
             console.log(error);
         }
 
         try {
             const optionsLd = await getVoteOptions(times.voteStartTime, "liquidityDirectionOptions_" + asset.asset, "liquidityDirectionOptions");
-            // break;
-            // await createLDVote(times, asset.asset, optionsLd, currentBlock + blockDiff, chainId);
+            await createLDVote(times, asset.asset, optionsLd, currentBlock + blockDiff, chainId);
         } catch (error) {
             console.log(error);
         }
