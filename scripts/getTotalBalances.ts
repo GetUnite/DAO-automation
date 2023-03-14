@@ -15,7 +15,8 @@ let tokensToCheckMainnet = [
     "0x5a98fcbea516cf06857215779fd812ca3bef1b32", // LDO
     "0x31429d1856ad1377a8a0079410b297e1a9e214c2", // ANGLE
     "0x090185f2135308bad17527004364ebcc2d37e5f6", // SPELL
-    "0xc581b735a1688071a1746c968e0798d642ede491" // EURT
+    "0xc581b735a1688071a1746c968e0798d642ede491", // EURT,
+    "0x1aBaEA1f7C830bD89Acc67eC4af516284b1bC33c" // EUROC
 ]
 
 let tokensToCheckPolygon = [
@@ -23,6 +24,7 @@ let tokensToCheckPolygon = [
     "0x2791bca1f2de4661ed88a30c99a7a9449aa84174", // USDC
     "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619", // WETH
     "0x1bfd67037b42cf73acf2047067bd4f2c47d9bfd6", // WBTC
+    "0x7BDF330f423Ea880FF95fC41A280fD5eCFD3D09f", // EURT
 ]
 
 export async function calculateTotalBalances(accounts: string[]): Promise<number> {
@@ -51,18 +53,12 @@ export async function calculateUserFunds(): Promise<number> {
         let valueHeldByGnosis = await iballuo.convertToAssetValue(gnosisBalance);
 
         let superToken = await iballuo.superToken();
-        let superTokenBalance = await iballuo.balanceOf(superToken);
-        let valueHeldBySuperToken = await iballuo.convertToAssetValue(superTokenBalance);
 
-        let streamableToken = await ethers.getContractAt("IERC20Metadata", superToken);
+        let streamableToken = await ethers.getContractAt("IStIbAlluo", superToken);
+        let gnosisBalanceStreamable = await streamableToken.realtimeBalanceOfNow("0x2580f9954529853ca5ac5543ce39e9b5b1145135");
+        let gnosisValueStreamable = await iballuo.convertToAssetValue(gnosisBalanceStreamable.availableBalance);
 
-        let totalSupplyStreamable = await streamableToken.totalSupply();
-        let totalValueStreamable = await iballuo.convertToAssetValue(totalSupplyStreamable);
-
-        let gnosisBalanceStreamable = await streamableToken.balanceOf("0x2580f9954529853ca5ac5543ce39e9b5b1145135");
-        let gnosisValueStreamable = await iballuo.convertToAssetValue(gnosisBalanceStreamable);
-
-        let totalAssetCustomerFunds = Number(totalValueLocked) - Number(valueHeldByGnosis) - Number(valueHeldBySuperToken) + Number(totalValueStreamable) + Number(gnosisValueStreamable);
+        let totalAssetCustomerFunds = Number(totalValueLocked) - Number(valueHeldByGnosis) + Number(gnosisValueStreamable);
         console.log("IbAlluo:", await iballuo.name(), "Total asset customer funds:", totalAssetCustomerFunds / (10 ** 18));
         finalValue += primaryTokenPrice * totalAssetCustomerFunds / (10 ** 18);
     }
@@ -108,7 +104,13 @@ async function checkPolygonBalances(tokenArray: string[], account: string): Prom
         let tokenContract = await ethers.getContractAt("IERC20Metadata", tokenAddress)
         let balance = await tokenContract.balanceOf(account)
         let decimals = await getTokenDecimals(tokenAddress)
-        let price = await getTokenPrice(tokenAddress, "polygon-pos")
+        let price;
+        if (tokenAddress == "0x7BDF330f423Ea880FF95fC41A280fD5eCFD3D09f") {
+            // Coingecko doesn't have polygon price for EURT
+            price = await getTokenPrice("0xc581b735a1688071a1746c968e0798d642ede491", "ethereum")
+        } else {
+            price = await getTokenPrice(tokenAddress, "polygon-pos")
+        }
         let balanceInUsd = Number(balance) / (10 ** decimals) * price
         totalBalance += balanceInUsd
     }

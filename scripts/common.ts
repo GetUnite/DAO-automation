@@ -139,19 +139,23 @@ export async function getVoteOptions(voteDate: Date, optionsType: string, folder
     }
     else if (folder == "treasuryPercentageOptions") {
         let treasuryValueToday = 0;
+        // Value of token balances as well as Alluo uniswapv3 pool position (only ETH part)
+        let totalGnosisTokenBalances = await calculateTotalBalances(["0x1F020A4943EB57cd3b2213A66b355CB662Ea43C3", "0x2580f9954529853Ca5aC5543cE39E9B5B1145135"]);
 
-        // Total Gnosis wallet balance in usd
-        // Total gnosis balanceo f alluo pool ---> only ETH part of alluo pool and set alluo tokens to 0
-        treasuryValueToday += await calculateTotalBalances(["0x1F020A4943EB57cd3b2213A66b355CB662Ea43C3", "0x2580f9954529853Ca5aC5543cE39E9B5B1145135"]);
+        // Value of all funds inside booster pools held by gnosis
+        let boosterFundsValue = await calculateBoosterFunds("0x1F020A4943EB57cd3b2213A66b355CB662Ea43C3");
 
-        // Total gnosis balances inside booster pools
-        treasuryValueToday += await calculateBoosterFunds("0x1F020A4943EB57cd3b2213A66b355CB662Ea43C3")
-
+        // Value of all liquidity direction locked on mainnet
         let totalLiquidityDirectionValue = await getTotalLiquidityDirectionValue()
-        // Total liquidity direction value  now
+
+        // Value of all buffer funds on polygon
+        let totalBufferValue = await getBufferAmountsPolygon()
+
+        treasuryValueToday += totalGnosisTokenBalances
+        treasuryValueToday += boosterFundsValue
         treasuryValueToday += totalLiquidityDirectionValue
-        // Total value of all buffer contracts
-        treasuryValueToday += await getBufferAmountsPolygon()
+        treasuryValueToday += totalBufferValue
+
         console.log("Inflated estimate of treasury value before deductions", treasuryValueToday);
 
         // Subtract all user funds
@@ -161,7 +165,7 @@ export async function getVoteOptions(voteDate: Date, optionsType: string, folder
         treasuryValueToday -= totalCustomerFunds;
         console.log("Final estimate of treasury value today", treasuryValueToday);
 
-        let treasuryValueCurrentlyDeployed = totalLiquidityDirectionValue - totalCustomerFunds;
+        let treasuryValueCurrentlyDeployed = totalLiquidityDirectionValue + totalBufferValue - totalCustomerFunds;
         console.log("TOtal treasury value currently deployed", treasuryValueCurrentlyDeployed);
         json.push([treasuryValueCurrentlyDeployed.toFixed(0), treasuryValueToday.toFixed(0)])
         console.log("json after", json);
@@ -220,17 +224,21 @@ async function getHistoricalAPY(voteOption: string, llamaAPICode: string): Promi
     return (await calculateReturns(14, convexPool1, curvePool1, index1, curvePool2, index2))[0]
 }
 
-export function getTimes(voteStartHour: number, voteLengthSeconds: number, voteEffectLengthSeconds: number): Times {
+export function getTimes(voteStartHour: number, voteLengthSeconds: number, voteEffectLengthSeconds: number, test: boolean): Times {
     const currentTime = new Date(Date.now());
     let voteStartTime = new Date(cloneDate(currentTime).setUTCHours(voteStartHour, 0, 0, 0));
-    // Only use the below for manual runs
-    // voteStartTime = currentTime
-    // // search for next Wednesday
-    while (voteStartTime.getDay() != 3) {
-        voteStartTime.setUTCDate(
-            voteStartTime.getUTCDate() + 1
-        );
+
+    if (test) {
+        voteStartTime = currentTime
+    } else {
+        // // search for next Wednesday
+        while (voteStartTime.getDay() != 3) {
+            voteStartTime.setUTCDate(
+                voteStartTime.getUTCDate() + 1
+            );
+        }
     }
+
 
     const voteEndTime = new Date(cloneDate(voteStartTime).valueOf() + voteLengthSeconds);
     const voteEffectEndTime = new Date(cloneDate(voteEndTime).valueOf() + voteEffectLengthSeconds);
