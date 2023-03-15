@@ -136,6 +136,10 @@ async function getTokenPrice(tokenAddress: string, network: string): (Promise<nu
     if (tokenAddress == "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE") {
         tokenAddress = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
     }
+    console.log("Getting", tokenAddress)
+
+    //Keep getting rate limited by coingecko randomly...
+    await delay(5000)
     let url = `https://api.coingecko.com/api/v3/coins/${network}/contract/${tokenAddress}`;
     return new Promise((resolve) => {
         https.get(url, (resp) => {
@@ -149,6 +153,9 @@ async function getTokenPrice(tokenAddress: string, network: string): (Promise<nu
             });
         });
     })
+}
+const delay = (delayInms: number) => {
+    return new Promise(resolve => setTimeout(resolve, delayInms));
 }
 
 let nftsToCheck = [

@@ -377,7 +377,7 @@ async function main() {
     try {
         const optionsMint = await getVoteOptions(times.voteStartTime, "mintProposalOptions", "mintProposalOptions");
 
-        await createMintVote(times, optionsMint, currentBlock + blockDiff, chainId, mainnetProvider);
+        // await createMintVote(times, optionsMint, currentBlock + blockDiff, chainId, mainnetProvider);
 
     } catch (error) {
         console.log(error);
@@ -385,7 +385,7 @@ async function main() {
 
     try {
         const optionsTreasury = await getVoteOptions(times.voteStartTime, "treasuryPercentageOptions", "treasuryPercentageOptions");
-        await createTreasuryVote(times, optionsTreasury[1], optionsTreasury[0], currentBlock + blockDiff, chainId);
+        // await createTreasuryVote(times, optionsTreasury[1], optionsTreasury[0], currentBlock + blockDiff, chainId);
 
     } catch (error) {
         console.log(error);
@@ -397,14 +397,14 @@ async function main() {
         try {
             const optionsApy = await getVoteOptions(times.voteStartTime, "apyProposalOptions_" + asset.asset, "apyProposalOptions");
 
-            await createAPYVote(times, asset.asset, asset.symbol, optionsApy, currentBlock + blockDiff, chainId, mainnetProvider);
+            // await createAPYVote(times, asset.asset, asset.symbol, optionsApy, currentBlock + blockDiff, chainId, mainnetProvider);
         } catch (error) {
             console.log(error);
         }
 
         try {
             const optionsLd = await getVoteOptions(times.voteStartTime, "liquidityDirectionOptions_" + asset.asset, "liquidityDirectionOptions");
-            await createLDVote(times, asset.asset, optionsLd, currentBlock + blockDiff, chainId);
+            // await createLDVote(times, asset.asset, optionsLd, currentBlock + blockDiff, chainId);
         } catch (error) {
             console.log(error);
         }

@@ -194,6 +194,8 @@ async function getTokenPrice(tokenAddress: string): (Promise<number>) {
     }
     let url = "https://api.coingecko.com/api/v3/coins/ethereum/contract/" + tokenAddress;
 
+    // Coingecko randomly rate limtis without clear limits.
+    await delay(5000)
     return new Promise((resolve) => {
         https.get(url, (resp) => {
             let data = "";
@@ -208,3 +210,6 @@ async function getTokenPrice(tokenAddress: string): (Promise<number>) {
     })
 }
 
+const delay = (delayInms: number) => {
+    return new Promise(resolve => setTimeout(resolve, delayInms));
+}

@@ -35,7 +35,11 @@ export async function getBufferAmountsPolygon(): Promise<number> {
     for (let i = 0; i < ibAlluosPolygon.length; i++) {
         let iballuo = await ethers.getContractAt("IIbAlluo", ibAlluosPolygon[i])
         let primaryToken = (await iballuo.getListSupportedTokens())[0]
-        let balance = await liquidityHandler.getAdapterAmount(ibAlluosPolygon[i]);
+        let balance = ethers.utils.parseUnits("0", await getTokenDecimals(primaryToken));
+        try {
+            balance = await liquidityHandler.getAdapterAmount(ibAlluosPolygon[i]);
+
+        } catch { }
         let balanceInNormal = Number(balance) / 10 ** 18;
         let primaryTokenValue = await getTokenPrice(primaryToken, "polygon-pos");
         console.log("balanceInNormal", balanceInNormal)
@@ -59,6 +63,9 @@ async function getTokenPrice(tokenAddress: string, network: string): (Promise<nu
         tokenAddress = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
     }
     let url = `https://api.coingecko.com/api/v3/coins/${network}/contract/${tokenAddress}`;
+
+    // Coingecko keeps rate limiting randomly.
+    await delay(5000);
     return new Promise((resolve) => {
         https.get(url, (resp) => {
             let data = "";
@@ -71,5 +78,8 @@ async function getTokenPrice(tokenAddress: string, network: string): (Promise<nu
             });
         });
     })
+}
+const delay = (delayInms: number) => {
+    return new Promise(resolve => setTimeout(resolve, delayInms));
 }
 
