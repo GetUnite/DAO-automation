@@ -376,7 +376,6 @@ async function main() {
 
     try {
         const optionsMint = await getVoteOptions(times.voteStartTime, "mintProposalOptions", "mintProposalOptions");
-
         await createMintVote(times, optionsMint, currentBlock + blockDiff, chainId, mainnetProvider);
 
     } catch (error) {
