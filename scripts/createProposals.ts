@@ -1,3 +1,4 @@
+import { reset } from "@nomicfoundation/hardhat-network-helpers";
 import snapshot from "@snapshot-labs/snapshot.js";
 import { Contract, ethers as eth, Wallet } from "ethers";
 import { formatUnits, parseUnits } from "ethers/lib/utils";
@@ -21,7 +22,7 @@ function getInterestPerSecondParam(apyPercent: number): string {
     const decimalInterest = Math.pow(decimalApy, 1 / secondsInYear);
     return Math.round(decimalInterest * (10 ** 17)).toString();
 }
-function numberWithCommas(x:string) {
+function numberWithCommas(x: string) {
     return x.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",");
 }
 
@@ -60,9 +61,6 @@ Parameters for contract:
         console.log("Using mainnet hub, space and contract");
     }
 
-    // Enable only for tests
-    // hub = "https://testnet.snapshot.org";
-    // space = "0xtuytuy.eth";
 
     const proposalType = "Treasury Vote"
     body += JSON.stringify({
@@ -70,7 +68,7 @@ Parameters for contract:
         args: options,
         value: treasuryValue
     }, null, 4) + "\n```";
-    
+
     const discussion = "https://discord.gg/jNaQF6sMxf";
     const plugins = JSON.stringify({});
     const type = "quadratic";
@@ -129,6 +127,7 @@ Parameters for contract:
         console.log("Using testnet hub and space");
         hub = "https://testnet.snapshot.org";
         space = "0xtuytuy.eth";
+
         veMasterInterface = (await ethers.getContractAt("IVoteExecutorMaster", voteExecutorMasterAddress)).interface;
         veMaster = new Contract(voteExecutorMasterAddress, veMasterInterface, provider);
     }
@@ -136,9 +135,7 @@ Parameters for contract:
         console.log("Using mainnet hub, space and contract");
     }
 
-    // Enable only for tests:
-    // hub = "https://testnet.snapshot.org";
-    // space = "0xtuytuy.eth";
+
 
     const optionsArgs = await Promise.all(
         options.map(async (x) => {
@@ -213,14 +210,12 @@ Parameters for contract:
         console.log("Using testnet hub and space");
         hub = "https://testnet.snapshot.org";
         space = "0xtuytuy.eth";
+
     }
     else {
         console.log("Using mainnet hub, space and contract");
     }
 
-    // Enable only for tests
-    // hub = "https://testnet.snapshot.org";
-    // space = "0xtuytuy.eth";
 
 
     const proposalType = "Liquidity Direction Vote"
@@ -292,9 +287,7 @@ Parameters for contract:
     else {
         console.log("Using mainnet hub, space and contract");
     }
-    // Enable only for tests
-    // hub = "https://testnet.snapshot.org";
-    // space = "0xtuytuy.eth";
+
 
     const optionsArgs = await Promise.all(
         options.map(async (x) => {
@@ -349,29 +342,40 @@ Parameters for contract:
 async function main() {
     // used for snapshot, voteExecutorMaster call, getting timestamps
     const mainnetProvider = ethers.getDefaultProvider(process.env.NODE_URL as string);
-    const chainId = (await mainnetProvider.getNetwork()).chainId;
+    let chainId = (await mainnetProvider.getNetwork()).chainId;
+    let test = false;
 
     const timerProvider = ethers.getDefaultProvider(process.env.POLYGON_URL as string);
     let timerInterface = (await ethers.getContractAt("VoteTimer", voteExecutorMasterAddressMainnet)).interface;
     let timer = new Contract("0xA27082C3334628C306ba022b1E6e2A9CA92e558f", timerInterface, timerProvider);
 
-    if (!await timer.canExecute2WeekVote()) {
-        console.log("Timer says that it is not time to create votes, exiting...");
-        return;
+    if (test) {
+        chainId = 99999
+    } else {
+        if (!await timer.canExecute2WeekVote()) {
+            console.log("Timer says that it is not time to create votes, exiting...");
+            return;
+        }
     }
+
     console.log("Timer says that it is time to create votes");
 
     const voteStartHour = Number.parseInt(process.env.APY_VOTE_START_HOUR as string);
     const voteLengthSeconds = Number.parseInt(process.env.APY_VOTE_LENGTH_MSECONDS as string);
     const voteEffectLengthSeconds = Number.parseInt(process.env.APY_VOTE_EFFECT_LENGTH_MSECONDS as string);
 
-    const times = getTimes(voteStartHour, voteLengthSeconds, voteEffectLengthSeconds);
+    const times = getTimes(voteStartHour, voteLengthSeconds, voteEffectLengthSeconds, test);
     const blockDiff = 0;
-    const currentBlock = await getCurrentBlock(mainnetProvider);
+
+    let currentBlock = await getCurrentBlock(mainnetProvider);
+    if (chainId == 99999) {
+        currentBlock = await getCurrentBlock(ethers.getDefaultProvider(process.env.TEST_URL));
+    }
     const assets = await getIbAlluosAssets();
 
+
     try {
-        const optionsMint = getVoteOptions(times.voteStartTime, "mintProposalOptions", "mintProposalOptions");
+        const optionsMint = await getVoteOptions(times.voteStartTime, "mintProposalOptions", "mintProposalOptions");
 
         await createMintVote(times, optionsMint, currentBlock + blockDiff, chainId, mainnetProvider);
 
@@ -380,8 +384,7 @@ async function main() {
     }
 
     try {
-        const optionsTreasury = getVoteOptions(times.voteStartTime, "treasuryPercentageOptions", "treasuryPercentageOptions");
-
+        const optionsTreasury = await getVoteOptions(times.voteStartTime, "treasuryPercentageOptions", "treasuryPercentageOptions");
         await createTreasuryVote(times, optionsTreasury[1], optionsTreasury[0], currentBlock + blockDiff, chainId);
 
     } catch (error) {
@@ -392,7 +395,7 @@ async function main() {
         const asset = assets[i];
 
         try {
-            const optionsApy = getVoteOptions(times.voteStartTime, "apyProposalOptions_" + asset.asset, "apyProposalOptions");
+            const optionsApy = await getVoteOptions(times.voteStartTime, "apyProposalOptions_" + asset.asset, "apyProposalOptions");
 
             await createAPYVote(times, asset.asset, asset.symbol, optionsApy, currentBlock + blockDiff, chainId, mainnetProvider);
         } catch (error) {
@@ -400,8 +403,7 @@ async function main() {
         }
 
         try {
-            const optionsLd = getVoteOptions(times.voteStartTime, "liquidityDirectionOptions_" + asset.asset, "liquidityDirectionOptions");
-
+            const optionsLd = await getVoteOptions(times.voteStartTime, "liquidityDirectionOptions_" + asset.asset, "liquidityDirectionOptions");
             await createLDVote(times, asset.asset, optionsLd, currentBlock + blockDiff, chainId);
         } catch (error) {
             console.log(error);
