@@ -373,18 +373,17 @@ async function main() {
     }
     const assets = await getIbAlluosAssets();
 
-
     try {
-        const optionsMint = await getVoteOptions(times.voteStartTime, "mintProposalOptions", "mintProposalOptions");
-        await createMintVote(times, optionsMint, currentBlock + blockDiff, chainId, mainnetProvider);
+        const optionsTreasury = await getVoteOptions(times.voteStartTime, "treasuryPercentageOptions", "treasuryPercentageOptions");
+        await createTreasuryVote(times, optionsTreasury[1], optionsTreasury[0], currentBlock + blockDiff, chainId);
 
     } catch (error) {
         console.log(error);
     }
 
     try {
-        const optionsTreasury = await getVoteOptions(times.voteStartTime, "treasuryPercentageOptions", "treasuryPercentageOptions");
-        await createTreasuryVote(times, optionsTreasury[1], optionsTreasury[0], currentBlock + blockDiff, chainId);
+        const optionsMint = await getVoteOptions(times.voteStartTime, "mintProposalOptions", "mintProposalOptions");
+        await createMintVote(times, optionsMint, currentBlock + blockDiff, chainId, mainnetProvider);
 
     } catch (error) {
         console.log(error);

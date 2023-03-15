@@ -139,7 +139,7 @@ async function getTokenPrice(tokenAddress: string, network: string): (Promise<nu
     console.log("Getting", tokenAddress)
 
     //Keep getting rate limited by coingecko randomly...
-    await delay(7000)
+    await delay(10000)
     let url = `https://api.coingecko.com/api/v3/coins/${network}/contract/${tokenAddress}`;
     return new Promise((resolve) => {
         https.get(url, (resp) => {
