@@ -4,6 +4,7 @@
   "description": "Automation tools for Alluo governance",
   "main": "harhdat.config.ts",
   "scripts": {
+    "build" : "cd scripts/curve-analytics && npm install && tsc",
     "test": "npx hardhat test",
     "rundemo": "npx hardhat run scripts/voteTimerDemo.ts --network node"
   },
@@ -45,10 +46,14 @@
     "ts-node": "^10.8.1",
     "twitter-api-v2": "^1.12.2",
     "typechain": "^5.2.0",
+    "aws-cdk": "2.66.1",
     "typescript": "^4.7.3"
   },
   "dependencies": {
     "@snapshot-labs/snapshot.js": "^0.3.97",
-    "telegraf": "^4.10.0"
+    "aws-cdk-lib": "^2.66.1",
+    "telegraf": "^4.10.0",
+    "constructs": "^10.0.0",
+    "source-map-support": "^0.5.21"
   }
 }

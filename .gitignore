@@ -7,3 +7,12 @@ typechain
 #Hardhat files
 cache
 artifacts
+
+*.js
+!jest.config.js
+*.d.ts
+
+# CDK asset staging directory
+.cdk.staging
+cdk.out
+cdk.context.json
