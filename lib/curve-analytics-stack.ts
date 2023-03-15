@@ -17,7 +17,7 @@ export class CurveAnalyticsStack extends cdk.Stack {
     const lambdaFunction = new lambda.Function(this, 'Curve analytics', {
       runtime: lambda.Runtime.NODEJS_16_X,
       memorySize: 1024,
-      timeout: cdk.Duration.seconds(5),
+      timeout: cdk.Duration.minutes(5),
       handler: 'index.main',
       code: lambda.Code.fromAsset('scripts/curve-analytics'),
       environment: {
