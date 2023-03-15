@@ -175,6 +175,9 @@ export async function getVoteOptions(voteDate: Date, optionsType: string, folder
 
 async function getAPY(voteOption: string, llamaAPICode: string): Promise<string> {
     let estimatedFactorAbove = 0;
+    if (voteOption == "Do nothing") {
+        return voteOption;
+    }
     if (llamaAPICode.split("-")[0] == "HISTORICAL") {
         let final2WeekAPR = await getHistoricalAPY(voteOption, llamaAPICode)
         return formatVoteOption(final2WeekAPR.toString(), voteOption);
