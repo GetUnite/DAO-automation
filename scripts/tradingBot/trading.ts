@@ -1,7 +1,7 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { BigNumber } from "ethers";
 import { formatEther, parseEther } from "ethers/lib/utils";
-import { gasPriceThreshold, getRandomSigner, isGasPriceGood } from "./ethers";
+import { gasPriceThreshold, getMaxBalance, getRandomSigner, isGasPriceGood } from "./ethers";
 import { log, warning } from "./logging";
 import { delay, getRandomOppositeTradePause } from "./timing";
 import { randomInRange } from "./tools";
@@ -11,8 +11,8 @@ let alluoVolume = BigNumber.from(0);
 let ethVolume = BigNumber.from(0);
 
 async function getTradeVolume(doAlluo: boolean): Promise<BigNumber> {
-    const min = 22000000000000; // 0.22 ETH
-    const max = 44000000000000; // 0.44 ETH
+    const max = (await getMaxBalance()).div("10000").toNumber();
+    const min = max / 2;
 
     const ethValue = BigNumber.from(randomInRange(min, max)).mul("10000");
 
