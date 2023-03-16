@@ -166,10 +166,18 @@ bot.command("logs", (ctx) => {
     console.log(`User ${ctx.message.from.first_name} ${ctx.message.from.last_name} (@${ctx.message.from.username}) sent /logs command`);
 
     const filePath = "nohup.out";
+    const filePathBot = "bot.out";
 
     ctx.replyWithDocument(
         {
             source: filePath,
+            filename: `${new Date().toUTCString()}_logs.log`
+        }
+    );
+
+    ctx.replyWithDocument(
+        {
+            source: filePathBot,
             filename: `${new Date().toUTCString()}_bot_logs.log`
         }
     );
