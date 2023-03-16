@@ -32,7 +32,7 @@ const config: HardhatUserConfig = {
         url: process.env.MAINNET_URL || ""
       },
       accounts: {
-        count: 11
+        count: 5
       }
     },
     polygon: {
@@ -51,7 +51,7 @@ const config: HardhatUserConfig = {
       url: process.env.MAINNET_URL || "https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161",
       accounts: {
         mnemonic: process.env.MNEMONIC,
-        count: 11
+        count: 5
       }
     },
     goerli: {
