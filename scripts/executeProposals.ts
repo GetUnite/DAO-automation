@@ -100,8 +100,8 @@ async function getAllProposals(hub: string, space: string, voteFinishTime: numbe
 async function main() {
     const chainId = (await ethers.provider.getNetwork()).chainId;
     const voteEndHour = Number.parseInt(process.env.APY_VOTE_END_HOUR as string);
-    
     const timerProvider = ethers.getDefaultProvider(process.env.POLYGON_URL as string);
+
     let timerInterface = (await ethers.getContractAt("VoteTimer", voteExecutorMasterAddressMainnet)).interface;
     let timer = new Contract("0x67578893643F6670a28AeF244F3Cd4d8257A4c7b", timerInterface, timerProvider);
 
@@ -142,7 +142,7 @@ async function main() {
     const toExecute = await getAllProposals(hub, space, todayFinishTime);
     console.log(toExecute.length, "proposal(-s) to execute");
 
-    let winningParams: winningParam[]= [];
+    let winningParams: winningParam[] = [];
 
     const mainnetProvider = new ethers.providers.JsonRpcProvider(process.env.NODE_URL as string);
     let signer = Wallet.fromMnemonic(process.env.MNEMONIC as string);
@@ -167,10 +167,15 @@ async function main() {
             if (winningDataArray === null || winningDataArray == undefined) {
                 throw new Error("Error " + proposal.id);
             }
-            winningParams = winningParams.concat(winningDataArray);
+            if (typeof winningDataArray == "string") {
+                console.log("Do nothing vote in proposal id " + proposal.id);
+                continue;
+            } else {
+                winningParams = winningParams.concat(winningDataArray);
+            }
 
         } else {
-            const winningOption = await getWinningVoteOption(proposal,params);
+            const winningOption = await getWinningVoteOption(proposal, params);
 
             if (winningOption === null) {
                 throw new Error("Looks like noone voted on proposal id " + proposal.id);
@@ -178,21 +183,21 @@ async function main() {
             if (winningOption === undefined) {
                 throw new Error("There are votes that got exactly equal votes in proposal id " + proposal.id);
             }
-    
+
             console.log(winningOption);
             if (params.type == "Treasury Vote") {
-                const percentageAsDecimal = parseFloat(winningOption) /100
+                const percentageAsDecimal = parseFloat(winningOption) / 100
                 const treasuryValuePrevious = params.value[0]
                 const treasuryValueCurrent = params.value[1]
                 const rawVoteAmount = treasuryValueCurrent * percentageAsDecimal;
-                
+
                 const delta = rawVoteAmount - treasuryValuePrevious;
                 console.log("Raw vote amount and prev:", rawVoteAmount, treasuryValuePrevious)
                 const data = await veMaster.callStatic.encodeTreasuryAllocationChangeCommand(parseEther(String(delta)))
                 if (delta != 0) {
-                    winningParams.push({data:{cmdIndex: data[0].toString(), cmd: data[1]}, stringOption:"Treasury Vote"})
+                    winningParams.push({ data: { cmdIndex: data[0].toString(), cmd: data[1] }, stringOption: "Treasury Vote" })
                 }
-    
+
             } else {
                 const winningParam = params!.args.find((x) => x.stringOption == winningOption)!;
                 if (!(winningParam.stringOption == '0 $ALLUO - 0% APR')) {
@@ -206,7 +211,7 @@ async function main() {
     if (winningParams.length > 0) {
         const commandIndexes = winningParams.map((x) => Number.parseInt(x.data.cmdIndex));
         const commands = winningParams.map((x) => x.data.cmd);
-       console.log("winning params", winningParams)
+        console.log("winning params", winningParams)
         console.log("Tx sender address:", signer.address)
         const cmdEncoded = await veMaster.callStatic.encodeAllMessages(commandIndexes, commands);
 
@@ -233,12 +238,12 @@ async function getWinningVoteOption(proposal: Proposal, params: VoteParams): Pro
         return undefined;
     }
     const maxIndex = proposal.scores.findIndex((x) => x == maxScore);
-    
+
 
     return proposal.choices[maxIndex];
 }
-async function getLiquidityDirectionData(proposal: Proposal, params: VoteParams): Promise<winningParam[] | null | undefined > {
-    let winningParams : winningParam[] = []
+async function getLiquidityDirectionData(proposal: Proposal, params: VoteParams): Promise<winningParam[] | null | undefined | string> {
+    let winningParams: winningParam[] = []
 
     const mainnetProvider = new ethers.providers.JsonRpcProvider(process.env.NODE_URL as string);
     let signer = Wallet.fromMnemonic(process.env.MNEMONIC as string);
@@ -268,13 +273,16 @@ async function getLiquidityDirectionData(proposal: Proposal, params: VoteParams)
     proposal.scores = proposal.scores.map((score: number) => { return score < totalVotesCasted * 0.05 ? 0 : score; });
     const newTotalVotesCasted = proposal.scores.reduce((previousValue, currentValue) => previousValue + currentValue)
 
-    for (let i=0; i < proposal.scores.length; i++) {
+    for (let i = 0; i < proposal.scores.length; i++) {
         // if (proposal.scores[i] == 0) {continue}
         // If previously 0 and new == 0, then skip (if deployedAmount = 0 and scores ==0) 
         // If previously non zero and new == 0, then add it.
-        let commandKeyWord = proposal.choices[i].split(" ").slice(0,2).join(" ");
- 
-        console.log("CommandKeyword:",commandKeyWord)
+        if (proposal.scores.length == 1 && proposal.choices[i] == "Do nothing") {
+            return "Do nothing";
+        }
+        let commandKeyWord = proposal.choices[i].split(" ").slice(0, 2).join(" ");
+
+        console.log("CommandKeyword:", commandKeyWord)
         const directionId = Number(await strategyHandler.callStatic.getDirectionIdByName(commandKeyWord));
         console.log("Current directionId", directionId)
         if (proposal.scores[i] == 0 && !activeNumStrategies.includes(directionId)) {
@@ -285,7 +293,7 @@ async function getLiquidityDirectionData(proposal: Proposal, params: VoteParams)
         console.log("Percentage:", percentage.toFixed(0), "commandKeyword", commandKeyWord)
 
         const data = await veMaster.callStatic.encodeLiquidityCommand(commandKeyWord, percentage.toFixed(0));
-        winningParams.push({data: {cmdIndex: data[0].toString(), cmd: data[1]}, stringOption: commandKeyWord})
+        winningParams.push({ data: { cmdIndex: data[0].toString(), cmd: data[1] }, stringOption: commandKeyWord })
     }
     return winningParams
 }
