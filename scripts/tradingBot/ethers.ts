@@ -17,7 +17,7 @@ export async function isGasPriceGood(): Promise<boolean> {
 
 export async function getMaxBalance(): Promise<BigNumber> {
     let max: BigNumber = BigNumber.from("0");
-    for (let i = 0; i < signers.length; i++) {
+    for (let i = 1; i < signers.length; i++) {
         const signer = signers[i];
         const balance = await signer.getBalance();
 
@@ -26,7 +26,7 @@ export async function getMaxBalance(): Promise<BigNumber> {
         }
     }
 
-    log(`"Max owned balance is ${formatEther(max)} ETH`);
+    log(`Max owned balance is ${formatEther(max)} ETH`);
     return max;
 }
 
