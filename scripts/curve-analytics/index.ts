@@ -44,7 +44,11 @@ const liquidityDirectionIdToName: LdIdToString = {
     13: 'Curve/Convex multiBTC',
     12: 'Curve/Convex ETH+pETH',
     7: 'Curve/Convex renBTC+WBTC+sBTC',
-    2: 'Curve/Convex Musd+3CRV'
+    2: 'Curve/Convex Musd+3CRV',
+
+    1000: 'Curve 3CRV',
+    1001: 'Curve sbtc2',
+    1002: 'Curve mim',
 }
 
 async function initGoogleApi() {
@@ -162,10 +166,14 @@ async function getCurrentLiquidityDirection(): Promise<(LiquidityDirectionInfo |
     return liquidityDirection;
 }
 
-async function tryGetCurveInfo(pool: string, curveIndex: BigNumber, coreAssetId: number, ldId: number): Promise<LiquidityDirectionInfo | null> {
+async function tryGetCurveInfo(pool: string, curveIndex: BigNumber, coreAssetId: number, ldId: number, lpTokenAddressFallback?: string): Promise<LiquidityDirectionInfo | null> {
     const abiPool = require("./abis/mainnet/curve/pool.json");
     const abiToken = require("./abis/mainnet/curve/token.json");
     const contractPool = new ethers.Contract(pool, abiPool, providerMainnet);
+
+    if (pool == "0x4ca9b3063ec5866a4b82e437059d2c43d1be596f") {
+        lpTokenAddressFallback = "0xb19059ebb43466C323583928285a49f558E572Fd"
+    }
 
     let tokens: string[] = [];
     for (let index = 0; ; index++) {
@@ -220,7 +228,14 @@ async function tryGetCurveInfo(pool: string, curveIndex: BigNumber, coreAssetId:
             const contractToken = new ethers.Contract(lpTokenAddress, abiToken, providerMainnet);
             totalLp = await contractToken.callStatic.totalSupply();
         } catch (error) {
-            return null;
+            try {
+                const lpTokenAddress = lpTokenAddressFallback;
+                if (lpTokenAddress == undefined) return null;
+                const contractToken = new ethers.Contract(lpTokenAddress, abiToken, providerMainnet);
+                totalLp = await contractToken.callStatic.totalSupply();
+            } catch (error) {
+                return null;
+            }
         }
     }
 
@@ -382,7 +397,15 @@ export async function lambdaMain(event: any) {
         await initGoogleApi();
         await initProviders();
 
-        const lds = await getCurrentLiquidityDirection();
+        let lds = await getCurrentLiquidityDirection();
+        lds.push(
+            // 3crv
+            await tryGetCurveInfo("0xbebc44782c7db0a1a60cb6fe97d0b483032ff1c7", BigNumber.from(1), 0, 1000, "0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490"),
+            // crvWSBTC
+            await tryGetCurveInfo("0xf253f83AcA21aAbD2A20553AE0BF7F65C755A07F", BigNumber.from(0), 3, 1001),
+            // mim3crv
+            await tryGetCurveInfo("0x5a6a4d54456819380173272a5e8e9b9904bdf41b", BigNumber.from(1), 0, 1002),
+        );
         await addCurrentLiquidityDirection(lds);
 
         return {
