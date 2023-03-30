@@ -45,7 +45,13 @@ export async function calculateUserFunds(): Promise<number> {
     for (let iballuoAddress of iballuoAddresses) {
         let iballuo = await ethers.getContractAt("IIbAlluo", iballuoAddress);
         let primaryToken = (await iballuo.getListSupportedTokens())[0]
-        let primaryTokenPrice = await getTokenPrice(primaryToken, "polygon-pos")
+        let primaryTokenPrice;
+
+        if (primaryToken == "0x7BDF330f423Ea880FF95fC41A280fD5eCFD3D09f") {
+            primaryTokenPrice = await getTokenPrice("0xc581b735a1688071a1746c968e0798d642ede491", "ethereum")
+        } else {
+            primaryTokenPrice = await getTokenPrice(primaryToken, "polygon-pos");
+        }
 
         let totalValueLocked = await iballuo.totalAssetSupply();
 
