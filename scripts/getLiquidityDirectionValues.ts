@@ -41,8 +41,13 @@ export async function getBufferAmountsPolygon(): Promise<number> {
 
         } catch { }
         let balanceInNormal = Number(balance) / 10 ** 18;
-        let primaryTokenValue = await getTokenPrice(primaryToken, "polygon-pos");
-        console.log("balanceInNormal", balanceInNormal)
+        let primaryTokenValue;
+        if (primaryToken == "0x7BDF330f423Ea880FF95fC41A280fD5eCFD3D09f") {
+            primaryTokenValue = await getTokenPrice("0xc581b735a1688071a1746c968e0798d642ede491", "ethereum")
+        } else {
+            primaryTokenValue = await getTokenPrice(primaryToken, "polygon-pos");
+        }
+        console.log("balanceInNormal2", balanceInNormal)
         totalValue += balanceInNormal * primaryTokenValue;
     }
     return totalValue;
@@ -65,19 +70,36 @@ async function getTokenPrice(tokenAddress: string, network: string): (Promise<nu
     let url = `https://api.coingecko.com/api/v3/coins/${network}/contract/${tokenAddress}`;
 
     // Coingecko keeps rate limiting randomly.
-    await delay(20000);
-    return new Promise((resolve) => {
-        https.get(url, (resp) => {
-            let data = "";
-            resp.on("data", (chunk) => {
-                data += chunk;
+    await delay(5000);
+
+    const getPrice = () => {
+        return new Promise((resolve, reject) => {
+            https.get(url, (resp) => {
+                let data = "";
+                resp.on("data", (chunk) => {
+                    data += chunk;
+                });
+                resp.on("end", () => {
+                    const price = JSON.parse(data);
+                    resolve(price.market_data.current_price.usd);
+                });
+                resp.on("error", (err) => {
+                    reject(err)
+                })
             });
-            resp.on("end", () => {
-                let price = JSON.parse(data).market_data.current_price.usd;
-                resolve(price);
-            });
-        });
-    })
+        })
+    }
+    let price = undefined;
+    while (price == undefined) {
+        try {
+            price = await getPrice() as number;
+        } catch (err) {
+            console.log("Errored out, retrying");
+            await delay(5000)
+        }
+    }
+
+    return price;
 }
 const delay = (delayInms: number) => {
     return new Promise(resolve => setTimeout(resolve, delayInms));

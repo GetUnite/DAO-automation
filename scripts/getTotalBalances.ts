@@ -136,23 +136,39 @@ async function getTokenPrice(tokenAddress: string, network: string): (Promise<nu
     if (tokenAddress == "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE") {
         tokenAddress = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
     }
-    console.log("Getting", tokenAddress)
-
-    //Keep getting rate limited by coingecko randomly...
-    await delay(20000)
     let url = `https://api.coingecko.com/api/v3/coins/${network}/contract/${tokenAddress}`;
-    return new Promise((resolve) => {
-        https.get(url, (resp) => {
-            let data = "";
-            resp.on("data", (chunk) => {
-                data += chunk;
+
+    // Coingecko keeps rate limiting randomly.
+    await delay(5000);
+
+    const getPrice = () => {
+        return new Promise((resolve, reject) => {
+            https.get(url, (resp) => {
+                let data = "";
+                resp.on("data", (chunk) => {
+                    data += chunk;
+                });
+                resp.on("end", () => {
+                    const price = JSON.parse(data);
+                    resolve(price.market_data.current_price.usd);
+                });
+                resp.on("error", (err) => {
+                    reject(err)
+                })
             });
-            resp.on("end", () => {
-                let price = JSON.parse(data).market_data.current_price.usd;
-                resolve(price);
-            });
-        });
-    })
+        })
+    }
+    let price = undefined;
+    while (price == undefined) {
+        try {
+            price = await getPrice() as number;
+        } catch (err) {
+            console.log("Errored out, retrying");
+            await delay(5000)
+        }
+    }
+
+    return price;
 }
 const delay = (delayInms: number) => {
     return new Promise(resolve => setTimeout(resolve, delayInms));

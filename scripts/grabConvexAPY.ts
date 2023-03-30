@@ -58,13 +58,13 @@ export async function calculateReturns(numberOfDays: number, baseContractAddress
 
     // All CRV + extra token rewards first, calculate CVX in the middle
     for (let i = 0; i < rewardPerTokenDeltaArray.length; i++) {
-        let tokenPrice = await getTokenPrice(rewardPerTokenDeltaArray[i].tokenAddress)
+        let tokenPrice = await getTokenPrice(rewardPerTokenDeltaArray[i].tokenAddress, "ethereum")
         let tokenAmount = Number(rewardPerTokenDeltaArray[i].rewardPerToken) / 1e18
         finalUSDValue += tokenPrice * Number(tokenAmount)
 
         if (rewardPerTokenDeltaArray[i].tokenAddress == "0xD533a949740bb3306d119CC777fa900bA034cd52") {
             let cvxAmount = await calculateCVXRewardsAccumulated(tokenAmount)
-            let cvxPrice = await getTokenPrice("0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B")
+            let cvxPrice = await getTokenPrice("0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B", "ethereum")
             finalUSDValue += cvxPrice * cvxAmount
         }
     }
@@ -108,7 +108,7 @@ async function calculateUSDValueOfLP(curvePoolAddress: string, index: number, se
         let correctCurvePoolContract = await ethers.getContractAt("ICurveCVXETH", curvePoolAddress) as ICurveCVXETH;
         oneLpToIndexCoin = await correctCurvePoolContract.calc_withdraw_one_coin(ethers.utils.parseEther("1"), index)
     }
-    let indexCoinPrice = await getTokenPrice(indexCoin)
+    let indexCoinPrice = await getTokenPrice(indexCoin, "ethereum")
     let indexCoinDecimals = await getTokenDecimals(indexCoin);
     let lpUSDValue = Number(ethers.utils.formatUnits(oneLpToIndexCoin, indexCoinDecimals)) * indexCoinPrice
 
@@ -141,7 +141,7 @@ async function calculateUSDValueOfLPComplex(curvePoolAddress: string, index: num
         quantityLpToSecondIndexCoin = await correctCurvePoolContract.calc_withdraw_one_coin(oneLpToIndexCoin, secondIndex)
     }
 
-    let secondIndexCoinPrice = await getTokenPrice(secondIndexCoin)
+    let secondIndexCoinPrice = await getTokenPrice(secondIndexCoin, "ethereum")
     let secondIndexCoinDecimals = await getTokenDecimals(secondIndexCoin);
     let lpUSDValue = Number(ethers.utils.formatUnits(quantityLpToSecondIndexCoin, secondIndexCoinDecimals)) * secondIndexCoinPrice
 
@@ -188,26 +188,43 @@ async function resetBlockBackDays(days: number): (Promise<void>) {
     await reset(process.env.NODE_URL, blockNumberRequested)
 }
 
-async function getTokenPrice(tokenAddress: string): (Promise<number>) {
+async function getTokenPrice(tokenAddress: string, network: string): (Promise<number>) {
     if (tokenAddress == "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE") {
         tokenAddress = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
     }
-    let url = "https://api.coingecko.com/api/v3/coins/ethereum/contract/" + tokenAddress;
+    let url = `https://api.coingecko.com/api/v3/coins/${network}/contract/${tokenAddress}`;
 
-    // Coingecko randomly rate limtis without clear limits.
-    await delay(20000)
-    return new Promise((resolve) => {
-        https.get(url, (resp) => {
-            let data = "";
-            resp.on("data", (chunk) => {
-                data += chunk;
+    // Coingecko keeps rate limiting randomly.
+    await delay(5000);
+
+    const getPrice = () => {
+        return new Promise((resolve, reject) => {
+            https.get(url, (resp) => {
+                let data = "";
+                resp.on("data", (chunk) => {
+                    data += chunk;
+                });
+                resp.on("end", () => {
+                    const price = JSON.parse(data);
+                    resolve(price.market_data.current_price.usd);
+                });
+                resp.on("error", (err) => {
+                    reject(err)
+                })
             });
-            resp.on("end", () => {
-                let price = JSON.parse(data).market_data.current_price.usd;
-                resolve(price);
-            });
-        });
-    })
+        })
+    }
+    let price = undefined;
+    while (price == undefined) {
+        try {
+            price = await getPrice() as number;
+        } catch (err) {
+            console.log("Errored out, retrying");
+            await delay(5000)
+        }
+    }
+
+    return price;
 }
 
 const delay = (delayInms: number) => {
