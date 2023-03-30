@@ -235,15 +235,16 @@ export function getTimes(voteStartHour: number, voteLengthSeconds: number, voteE
         voteStartTime = currentTime
     } else {
         // // search for next Wednesday
-        while (voteStartTime.getDay() != 3) {
-            voteStartTime.setUTCDate(
-                voteStartTime.getUTCDate() + 1
-            );
-        }
+        // while (voteStartTime.getDay() != 3) {
+        //     voteStartTime.setUTCDate(
+        //         voteStartTime.getUTCDate() + 1
+        //     );
+        // }
     }
 
 
-    const voteEndTime = new Date(cloneDate(voteStartTime).valueOf() + voteLengthSeconds);
+    // const voteEndTime = new Date(cloneDate(voteStartTime).valueOf() + voteLengthSeconds);
+    const voteEndTime = new Date(1680436800000);
     const voteEffectEndTime = new Date(cloneDate(voteEndTime).valueOf() + voteEffectLengthSeconds);
 
     console.log("Current time is", currentTime.toUTCString());
