@@ -6,6 +6,7 @@ import fetch from 'node-fetch';
 import { calculateReturns } from "./grabConvexAPY";
 import { calculateBoosterFunds, calculateTotalBalances, calculateUserFunds } from "./getTotalBalances";
 import { getBufferAmountsPolygon, getTotalLiquidityDirectionValue } from "./getLiquidityDirectionValues";
+import https from "https";
 
 export const voteExecutorMasterAddress = "0x82e568C482dF2C833dab0D38DeB9fb01777A9e89";
 export const voteExecutorMasterAddressMainnet = "0x82e568C482dF2C833dab0D38DeB9fb01777A9e89";
@@ -140,7 +141,7 @@ export async function getVoteOptions(voteDate: Date, optionsType: string, folder
     else if (folder == "treasuryPercentageOptions") {
         let treasuryValueToday = 0;
         // Value of token balances as well as Alluo uniswapv3 pool position (only ETH part)
-        let totalGnosisTokenBalances = await calculateTotalBalances(["0x1F020A4943EB57cd3b2213A66b355CB662Ea43C3", "0x2580f9954529853Ca5aC5543cE39E9B5B1145135"]);
+        let totalGnosisTokenBalances = await calculateTotalBalances(["0x1F020A4943EB57cd3b2213A66b355CB662Ea43C3", "0x2580f9954529853Ca5aC5543cE39E9B5B1145135", "0x82e568C482dF2C833dab0D38DeB9fb01777A9e89"]);
 
         // Value of all funds inside booster pools held by gnosis
         let boosterFundsValue = await calculateBoosterFunds("0x1F020A4943EB57cd3b2213A66b355CB662Ea43C3");
@@ -228,32 +229,21 @@ async function getHistoricalAPY(voteOption: string, llamaAPICode: string): Promi
 }
 
 export function getTimes(voteStartHour: number, voteLengthSeconds: number, voteEffectLengthSeconds: number, test: boolean): Times {
-    const currentTime = new Date(Date.now());
-    let voteStartTime = new Date(cloneDate(currentTime).setUTCHours(voteStartHour, 0, 0, 0));
-
-    if (test) {
-        voteStartTime = currentTime
-    } else {
-        // // search for next Wednesday
-        // while (voteStartTime.getDay() != 3) {
-        //     voteStartTime.setUTCDate(
-        //         voteStartTime.getUTCDate() + 1
-        //     );
-        // }
+    let voteStartTime = new Date(Date.now());
+    // // search for next Sunday
+    let voteEndTime = new Date(Date.now());
+    while (voteEndTime.getDay() != 0) {
+        voteEndTime.setUTCDate(
+            voteEndTime.getUTCDate() + 1
+        );
     }
-
-
-    // const voteEndTime = new Date(cloneDate(voteStartTime).valueOf() + voteLengthSeconds);
-    const voteEndTime = new Date(1680436800000);
     const voteEffectEndTime = new Date(cloneDate(voteEndTime).valueOf() + voteEffectLengthSeconds);
-
-    console.log("Current time is", currentTime.toUTCString());
     console.log("Vote start time is", voteStartTime.toUTCString());
     console.log("Vote end time is", voteEndTime.toUTCString());
     console.log("Vote effect end time is", voteEffectEndTime.toUTCString());
 
     return {
-        currentTime: currentTime,
+        currentTime: voteEndTime,
         voteStartTime: voteStartTime,
         voteEndTime: voteEndTime,
         apyEndTime: voteEffectEndTime
@@ -263,3 +253,57 @@ export function getTimes(voteStartHour: number, voteLengthSeconds: number, voteE
 export function msToSeconds(ms: number): number {
     return Math.round(ms / 1000);
 }
+
+export async function getTokenPrice(tokenAddress: string, network: string): (Promise<number>) {
+    if (tokenAddress == "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE") {
+        tokenAddress = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+    }
+    else if (tokenAddress == "0x7BDF330f423Ea880FF95fC41A280fD5eCFD3D09f" && network == "polygon-pos") {
+        // EURT doesnt have a price on polygon
+        tokenAddress = "0xc581b735a1688071a1746c968e0798d642ede491"
+        network = "ethereum"
+    }
+    let url = `https://api.coingecko.com/api/v3/coins/${network}/contract/${tokenAddress}`;
+
+    // Coingecko keeps rate limiting randomly.
+    await delay(5000);
+
+    const getPrice = () => {
+        return new Promise((resolve, reject) => {
+            https.get(url, (resp) => {
+                let data = "";
+                resp.on("data", (chunk) => {
+                    data += chunk;
+                });
+                resp.on("end", () => {
+                    const price = JSON.parse(data);
+                    resolve(price.market_data.current_price.usd);
+                });
+                resp.on("error", (err) => {
+                    reject(err)
+                })
+            });
+        })
+    }
+    let price = undefined;
+    let retries = 0;
+    while (price == undefined) {
+        if (retries > 10) {
+            throw new Error("Could not get price")
+        }
+        try {
+            price = await getPrice() as number;
+        } catch (err) {
+            console.log("Errored out, retrying");
+            await delay(5000)
+            retries += 1
+        }
+    }
+
+    return price;
+}
+
+const delay = (delayInms: number) => {
+    return new Promise(resolve => setTimeout(resolve, delayInms));
+}
+

@@ -1,11 +1,8 @@
 import { ethers } from "hardhat"
-import https from "https";
 import { reset } from "@nomicfoundation/hardhat-network-helpers";
 import { BigNumber } from "ethers";
-import { tickToPrice } from "@uniswap/v3-sdk";
 import { Token } from "@uniswap/sdk-core";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-
+import { getTokenPrice } from "./common";
 
 let tokensToCheckMainnet = [
     "0xdac17f958d2ee523a2206206994597c13d831ec7", // USDT
@@ -29,11 +26,13 @@ let tokensToCheckPolygon = [
 
 export async function calculateTotalBalances(accounts: string[]): Promise<number> {
     let mainnetTotalBalanceInUSD = await checkMainnetBalances(tokensToCheckMainnet, accounts[0])
+    let executorbalancesMainnet = await checkMainnetBalances(tokensToCheckMainnet, accounts[2]);
+    let uniswapPositionGnosis = await getUniV3Position();
     let polygonTotalBalanceInUSD = await checkPolygonBalances(tokensToCheckPolygon, accounts[1])
     console.log("Mainnet total balnace in USD: ", mainnetTotalBalanceInUSD)
     console.log("Polygon total balnace in USD: ", polygonTotalBalanceInUSD)
     await reset(process.env.NODE_URL)
-    return mainnetTotalBalanceInUSD + polygonTotalBalanceInUSD
+    return mainnetTotalBalanceInUSD + executorbalancesMainnet + uniswapPositionGnosis + polygonTotalBalanceInUSD
 }
 
 export async function calculateUserFunds(): Promise<number> {
@@ -45,13 +44,7 @@ export async function calculateUserFunds(): Promise<number> {
     for (let iballuoAddress of iballuoAddresses) {
         let iballuo = await ethers.getContractAt("IIbAlluo", iballuoAddress);
         let primaryToken = (await iballuo.getListSupportedTokens())[0]
-        let primaryTokenPrice;
-
-        if (primaryToken == "0x7BDF330f423Ea880FF95fC41A280fD5eCFD3D09f") {
-            primaryTokenPrice = await getTokenPrice("0xc581b735a1688071a1746c968e0798d642ede491", "ethereum")
-        } else {
-            primaryTokenPrice = await getTokenPrice(primaryToken, "polygon-pos");
-        }
+        let primaryTokenPrice = await getTokenPrice(primaryToken, "polygon-pos");
 
         let totalValueLocked = await iballuo.totalAssetSupply();
 
@@ -99,7 +92,6 @@ async function checkMainnetBalances(tokenArray: string[], account: string): Prom
         let balanceInUsd = Number(balance) / (10 ** decimals) * price
         totalBalance += balanceInUsd
     }
-    totalBalance += await getUniV3Position()
     return totalBalance
 }
 
@@ -110,13 +102,7 @@ async function checkPolygonBalances(tokenArray: string[], account: string): Prom
         let tokenContract = await ethers.getContractAt("IERC20Metadata", tokenAddress)
         let balance = await tokenContract.balanceOf(account)
         let decimals = await getTokenDecimals(tokenAddress)
-        let price;
-        if (tokenAddress == "0x7BDF330f423Ea880FF95fC41A280fD5eCFD3D09f") {
-            // Coingecko doesn't have polygon price for EURT
-            price = await getTokenPrice("0xc581b735a1688071a1746c968e0798d642ede491", "ethereum")
-        } else {
-            price = await getTokenPrice(tokenAddress, "polygon-pos")
-        }
+        let price = await getTokenPrice(tokenAddress, "polygon-pos")
         let balanceInUsd = Number(balance) / (10 ** decimals) * price
         totalBalance += balanceInUsd
     }
@@ -132,57 +118,6 @@ async function getTokenDecimals(tokenAddress: string): Promise<number> {
     return decimals
 }
 
-async function resetBlockBackDays(days: number): (Promise<void>) {
-    let blockNumberNow = await ethers.provider.getBlockNumber()
-    let blockNumberRequested = blockNumberNow - (days * 24 * 60 * 60 / 12)
-    await reset(process.env.NODE_URL, blockNumberRequested)
-}
-
-async function getTokenPrice(tokenAddress: string, network: string): (Promise<number>) {
-    if (tokenAddress == "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE") {
-        tokenAddress = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
-    }
-    let url = `https://api.coingecko.com/api/v3/coins/${network}/contract/${tokenAddress}`;
-
-    // Coingecko keeps rate limiting randomly.
-    await delay(5000);
-
-    const getPrice = () => {
-        return new Promise((resolve, reject) => {
-            https.get(url, (resp) => {
-                let data = "";
-                resp.on("data", (chunk) => {
-                    data += chunk;
-                });
-                resp.on("end", () => {
-                    const price = JSON.parse(data);
-                    resolve(price.market_data.current_price.usd);
-                });
-                resp.on("error", (err) => {
-                    reject(err)
-                })
-            });
-        })
-    }
-    let price = undefined;
-    while (price == undefined) {
-        try {
-            price = await getPrice() as number;
-        } catch (err) {
-            console.log("Errored out, retrying");
-            await delay(5000)
-        }
-    }
-
-    return price;
-}
-const delay = (delayInms: number) => {
-    return new Promise(resolve => setTimeout(resolve, delayInms));
-}
-
-let nftsToCheck = [
-    343227
-]
 
 let alluoUniswapV3Pool = "0x4e44c9abc0b7c61e5f9e165271581d823abf684d"
 
