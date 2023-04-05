@@ -1,10 +1,7 @@
 import { ethers } from "hardhat"
 import https from "https";
 import { reset } from "@nomicfoundation/hardhat-network-helpers";
-import { BigNumber } from "ethers";
-import { tickToPrice } from "@uniswap/v3-sdk";
-import { Token } from "@uniswap/sdk-core";
-
+import { getTokenPrice } from "./common";
 
 export async function getTotalLiquidityDirectionValue(): Promise<number> {
     await reset(process.env.NODE_URL)
@@ -41,12 +38,8 @@ export async function getBufferAmountsPolygon(): Promise<number> {
 
         } catch { }
         let balanceInNormal = Number(balance) / 10 ** 18;
-        let primaryTokenValue;
-        if (primaryToken == "0x7BDF330f423Ea880FF95fC41A280fD5eCFD3D09f") {
-            primaryTokenValue = await getTokenPrice("0xc581b735a1688071a1746c968e0798d642ede491", "ethereum")
-        } else {
-            primaryTokenValue = await getTokenPrice(primaryToken, "polygon-pos");
-        }
+        let primaryTokenValue = await getTokenPrice(primaryToken, "polygon-pos");
+
         console.log("balanceInNormal2", balanceInNormal)
         totalValue += balanceInNormal * primaryTokenValue;
     }
@@ -61,47 +54,5 @@ async function getTokenDecimals(tokenAddress: string): Promise<number> {
     let tokenContract = await ethers.getContractAt("IERC20Metadata", tokenAddress)
     let decimals = await tokenContract.decimals()
     return decimals
-}
-
-async function getTokenPrice(tokenAddress: string, network: string): (Promise<number>) {
-    if (tokenAddress == "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE") {
-        tokenAddress = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
-    }
-    let url = `https://api.coingecko.com/api/v3/coins/${network}/contract/${tokenAddress}`;
-
-    // Coingecko keeps rate limiting randomly.
-    await delay(5000);
-
-    const getPrice = () => {
-        return new Promise((resolve, reject) => {
-            https.get(url, (resp) => {
-                let data = "";
-                resp.on("data", (chunk) => {
-                    data += chunk;
-                });
-                resp.on("end", () => {
-                    const price = JSON.parse(data);
-                    resolve(price.market_data.current_price.usd);
-                });
-                resp.on("error", (err) => {
-                    reject(err)
-                })
-            });
-        })
-    }
-    let price = undefined;
-    while (price == undefined) {
-        try {
-            price = await getPrice() as number;
-        } catch (err) {
-            console.log("Errored out, retrying");
-            await delay(5000)
-        }
-    }
-
-    return price;
-}
-const delay = (delayInms: number) => {
-    return new Promise(resolve => setTimeout(resolve, delayInms));
 }
 
