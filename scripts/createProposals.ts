@@ -408,13 +408,13 @@ async function main() {
 
     const tweetText = `🔥Attention $ALLUO token holders!🔥
 
-    It's time to make your voice heard!🗣️
+It's time to make your voice heard!🗣️
 
-    Vote where to invest deposits and reap the rewards from the difference in realised APY and what is paid to depositors!💰
+Vote where to invest deposits and reap the rewards from the difference in realised APY and what is paid to depositors!💰
 
-    Vote now at https://vote.alluo.com/
+Vote now at https://vote.alluo.com/
 
-    #ALLUO #liquiditydirection #governance`;
+#ALLUO #liquiditydirection #governance`;
 
     await tweet([tweetText]);
 }
