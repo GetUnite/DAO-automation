@@ -243,7 +243,7 @@ export function getTimes(voteStartHour: number, voteLengthSeconds: number, voteE
     console.log("Vote effect end time is", voteEffectEndTime.toUTCString());
 
     return {
-        currentTime: voteEndTime,
+        currentTime: voteStartTime,
         voteStartTime: voteStartTime,
         voteEndTime: voteEndTime,
         apyEndTime: voteEffectEndTime
