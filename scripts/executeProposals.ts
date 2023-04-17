@@ -110,10 +110,10 @@ async function main() {
 
     const veMasterInterface = await ethers.getContractAt("IVoteExecutorMaster", voteExecutorMasterAddressMainnet);
 
-    // if (!await timer.canExecute2WeekVote()) {
-    //     console.log("Timer says that it is not time to execute votes, exiting...");
-    //     return;
-    // }
+    if (!await timer.canExecute2WeekVote()) {
+        console.log("Timer says that it is not time to execute votes, exiting...");
+        return;
+    }
 
     console.log("Timer says that it is time to execute votes");
 
@@ -132,12 +132,11 @@ async function main() {
     // hub = "https://testnet.snapshot.org/graphql";
     // space = "0xtuytuy.eth";
 
-    // let todayFinishTime = (new Date().setUTCHours(voteEndHour, 0, 0, 0)) / 1000;
-    let todayFinishTime = 1681646400;
+    let todayFinishTime = (new Date().setUTCHours(voteEndHour, 0, 0, 0)) / 1000;
 
-    // if ((new Date().valueOf()) <= (todayFinishTime * 1000)) {
-    //     throw new Error(`It is too early - expecting current time (${new Date().toUTCString()}) to be above ${new Date(todayFinishTime * 1000).toUTCString()}`);
-    // }
+    if ((new Date().valueOf()) <= (todayFinishTime * 1000)) {
+        throw new Error(`It is too early - expecting current time (${new Date().toUTCString()}) to be above ${new Date(todayFinishTime * 1000).toUTCString()}`);
+    }
     console.log("Searching for all proposals in space", space, "that finished at timestamp", todayFinishTime, "(", new Date(todayFinishTime * 1000).toUTCString(), ")");
 
     const toExecute = await getAllProposals(hub, space, todayFinishTime);
