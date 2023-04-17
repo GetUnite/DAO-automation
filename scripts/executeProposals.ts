@@ -110,10 +110,10 @@ async function main() {
 
     const veMasterInterface = await ethers.getContractAt("IVoteExecutorMaster", voteExecutorMasterAddressMainnet);
 
-    if (!await timer.canExecute2WeekVote()) {
-        console.log("Timer says that it is not time to execute votes, exiting...");
-        return;
-    }
+    // if (!await timer.canExecute2WeekVote()) {
+    //     console.log("Timer says that it is not time to execute votes, exiting...");
+    //     return;
+    // }
 
     console.log("Timer says that it is time to execute votes");
 
