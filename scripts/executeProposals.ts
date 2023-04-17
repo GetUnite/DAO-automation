@@ -132,7 +132,8 @@ async function main() {
     // hub = "https://testnet.snapshot.org/graphql";
     // space = "0xtuytuy.eth";
 
-    let todayFinishTime = (new Date().setUTCHours(voteEndHour, 0, 0, 0)) / 1000;
+    // let todayFinishTime = (new Date().setUTCHours(voteEndHour, 0, 0, 0)) / 1000;
+    let todayFinishTime = 1681646400;
 
     // if ((new Date().valueOf()) <= (todayFinishTime * 1000)) {
     //     throw new Error(`It is too early - expecting current time (${new Date().toUTCString()}) to be above ${new Date(todayFinishTime * 1000).toUTCString()}`);
