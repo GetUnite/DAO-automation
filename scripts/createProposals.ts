@@ -352,10 +352,10 @@ async function main() {
     if (test) {
         chainId = 99999
     } else {
-        //if (!await timer.canExecute2WeekVote()) {
-        //    console.log("Timer says that it is not time to create votes, exiting...");
-        //    return;
-        //}
+        if (!await timer.canExecute2WeekVote()) {
+            console.log("Timer says that it is not time to create votes, exiting...");
+            return;
+        }
     }
 
     console.log("Timer says that it is time to create votes");
