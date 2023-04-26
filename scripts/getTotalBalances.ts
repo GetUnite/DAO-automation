@@ -57,12 +57,16 @@ export async function calculateUserFunds(): Promise<number> {
         let gnosisBalanceStreamable = await streamableToken.realtimeBalanceOfNow("0x2580f9954529853ca5ac5543ce39e9b5b1145135");
         let gnosisValueStreamable = await iballuo.convertToAssetValue(gnosisBalanceStreamable.availableBalance);
 
-        let totalAssetCustomerFunds = Number(totalValueLocked) - Number(valueHeldByGnosis) + Number(gnosisValueStreamable);
+        let totalAssetCustomerFunds = Number(totalValueLocked) - Number(valueHeldByGnosis) - Number(gnosisValueStreamable);
         console.log("IbAlluo:", await iballuo.name(), "Total asset customer funds:", totalAssetCustomerFunds / (10 ** 18));
         finalValue += primaryTokenPrice * totalAssetCustomerFunds / (10 ** 18);
     }
     return finalValue;
 }
+
+// async function main() {
+//     await calculateUserFunds();
+// }
 
 export async function calculateBoosterFunds(address: string): Promise<number> {
     await reset(process.env.NODE_URL)
@@ -207,3 +211,11 @@ const calcAmount1 = (
     const adjustedMath = math > 0 ? math : 0
     return adjustedMath
 }
+
+
+// We recommend this pattern to be able to use async/await everywhere
+// and properly handle errors.
+// main().catch((error) => {
+//     console.error(error);
+//     process.exitCode = 1;
+// });
