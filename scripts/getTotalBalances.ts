@@ -64,10 +64,6 @@ export async function calculateUserFunds(): Promise<number> {
     return finalValue;
 }
 
-// async function main() {
-//     await calculateUserFunds();
-// }
-
 export async function calculateBoosterFunds(address: string): Promise<number> {
     await reset(process.env.NODE_URL)
     let boostersToCheck = ["0x1EE566Fd6918101C578a1d2365d632ED39BEd740", "0xcB9e36cD1A0eD9c98Db76d1619e649A7a032F271"]
@@ -211,11 +207,3 @@ const calcAmount1 = (
     const adjustedMath = math > 0 ? math : 0
     return adjustedMath
 }
-
-
-// We recommend this pattern to be able to use async/await everywhere
-// and properly handle errors.
-// main().catch((error) => {
-//     console.error(error);
-//     process.exitCode = 1;
-// });
