@@ -57,7 +57,7 @@ export async function calculateUserFunds(): Promise<number> {
         let gnosisBalanceStreamable = await streamableToken.realtimeBalanceOfNow("0x2580f9954529853ca5ac5543ce39e9b5b1145135");
         let gnosisValueStreamable = await iballuo.convertToAssetValue(gnosisBalanceStreamable.availableBalance);
 
-        let totalAssetCustomerFunds = Number(totalValueLocked) - Number(valueHeldByGnosis) + Number(gnosisValueStreamable);
+        let totalAssetCustomerFunds = Number(totalValueLocked) - Number(valueHeldByGnosis) - Number(gnosisValueStreamable);
         console.log("IbAlluo:", await iballuo.name(), "Total asset customer funds:", totalAssetCustomerFunds / (10 ** 18));
         finalValue += primaryTokenPrice * totalAssetCustomerFunds / (10 ** 18);
     }
