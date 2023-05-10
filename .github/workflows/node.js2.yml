@@ -2,8 +2,8 @@ name: Execute votes from Snapshot
 
 on:
   workflow_dispatch:
-  #schedule:
-  #  - cron:  '0 12 * * SUN'
+  schedule:
+    - cron:  '0 12 * * SUN'
 
 
 jobs:
