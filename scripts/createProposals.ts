@@ -352,10 +352,10 @@ async function main() {
     if (test) {
         chainId = 99999
     } else {
-        if (!await timer.canExecute2WeekVote()) {
-            console.log("Timer says that it is not time to create votes, exiting...");
-            return;
-        }
+        // if (!await timer.canExecute2WeekVote()) {
+        //     console.log("Timer says that it is not time to create votes, exiting...");
+        //     return;
+        // }
     }
 
     console.log("Timer says that it is time to create votes");
@@ -379,44 +379,44 @@ async function main() {
         console.log(error);
     }
 
-    try {
-        const optionsMint = await getVoteOptions("mintProposalOptions", "mintProposalOptions");
-        await createMintVote(optionsMint, currentBlock + blockDiff, chainId, mainnetProvider);
+//     try {
+//         const optionsMint = await getVoteOptions("mintProposalOptions", "mintProposalOptions");
+//         await createMintVote(optionsMint, currentBlock + blockDiff, chainId, mainnetProvider);
 
-    } catch (error) {
-        console.log(error);
-    }
+//     } catch (error) {
+//         console.log(error);
+//     }
 
-    for (let i = 0; i < assets.length; i++) {
-        const asset = assets[i];
+//     for (let i = 0; i < assets.length; i++) {
+//         const asset = assets[i];
 
-        try {
-            const optionsApy = await getVoteOptions("apyProposalOptions_" + asset.asset, "apyProposalOptions");
+//         try {
+//             const optionsApy = await getVoteOptions("apyProposalOptions_" + asset.asset, "apyProposalOptions");
 
-            await createAPYVote(asset.asset, asset.symbol, optionsApy, currentBlock + blockDiff, chainId, mainnetProvider);
-        } catch (error) {
-            console.log(error);
-        }
+//             await createAPYVote(asset.asset, asset.symbol, optionsApy, currentBlock + blockDiff, chainId, mainnetProvider);
+//         } catch (error) {
+//             console.log(error);
+//         }
 
-        try {
-            const optionsLd = await getVoteOptions("liquidityDirectionOptions_" + asset.asset, "liquidityDirectionOptions");
-            await createLDVote(asset.asset, optionsLd, currentBlock + blockDiff, chainId);
-        } catch (error) {
-            console.log(error);
-        }
-    }
+//         try {
+//             const optionsLd = await getVoteOptions("liquidityDirectionOptions_" + asset.asset, "liquidityDirectionOptions");
+//             await createLDVote(asset.asset, optionsLd, currentBlock + blockDiff, chainId);
+//         } catch (error) {
+//             console.log(error);
+//         }
+//     }
 
-    const tweetText = `🔥Attention $ALLUO token holders!🔥
+//     const tweetText = `🔥Attention $ALLUO token holders!🔥
 
-It's time to make your voice heard!🗣️
+// It's time to make your voice heard!🗣️
 
-Vote where to invest deposits and reap the rewards from the difference in realised APY and what is paid to depositors!💰
+// Vote where to invest deposits and reap the rewards from the difference in realised APY and what is paid to depositors!💰
 
-Vote now at https://vote.alluo.com/
+// Vote now at https://vote.alluo.com/
 
-#ALLUO #liquiditydirection #governance`;
+// #ALLUO #liquiditydirection #governance`;
 
-    await tweet([tweetText]);
+//     await tweet([tweetText]);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
