@@ -1,5 +1,6 @@
 
 import { ethers } from 'ethers';
+import fetch from 'node-fetch';
 
 export const callContract = async (
     abi: ethers.ContractInterface | { inputs: never[]; name: string; outputs: { internalType: string; name: string; type: string; }[]; stateMutability: string; type: string; }[],
