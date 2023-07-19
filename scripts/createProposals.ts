@@ -372,16 +372,16 @@ async function main() {
     const assets = await getIbAlluosAssets();
 
     try {
-        const optionsTreasury = await getVoteOptions("treasuryPercentageOptions", "treasuryPercentageOptions");
-        await createTreasuryVote(optionsTreasury[1], optionsTreasury[0], currentBlock + blockDiff, chainId);
+        // const optionsTreasury = await getVoteOptions("treasuryPercentageOptions", "treasuryPercentageOptions");
+        // await createTreasuryVote(optionsTreasury[1], optionsTreasury[0], currentBlock + blockDiff, chainId);
 
     } catch (error) {
         console.log(error);
     }
 
     try {
-        const optionsMint = await getVoteOptions("mintProposalOptions", "mintProposalOptions");
-        await createMintVote(optionsMint, currentBlock + blockDiff, chainId, mainnetProvider);
+        // const optionsMint = await getVoteOptions("mintProposalOptions", "mintProposalOptions");
+        // await createMintVote(optionsMint, currentBlock + blockDiff, chainId, mainnetProvider);
 
     } catch (error) {
         console.log(error);
@@ -391,16 +391,19 @@ async function main() {
         const asset = assets[i];
 
         try {
-            const optionsApy = await getVoteOptions("apyProposalOptions_" + asset.asset, "apyProposalOptions");
+            // const optionsApy = await getVoteOptions("apyProposalOptions_" + asset.asset, "apyProposalOptions");
 
-            await createAPYVote(asset.asset, asset.symbol, optionsApy, currentBlock + blockDiff, chainId, mainnetProvider);
+            // await createAPYVote(asset.asset, asset.symbol, optionsApy, currentBlock + blockDiff, chainId, mainnetProvider);
         } catch (error) {
             console.log(error);
         }
 
         try {
-            const optionsLd = await getVoteOptions("liquidityDirectionOptions_" + asset.asset, "liquidityDirectionOptions");
-            await createLDVote(asset.asset, optionsLd, currentBlock + blockDiff, chainId);
+
+            if (asset.asset == "ETH" || asset.asset == "USD") {
+                const optionsLd = await getVoteOptions("liquidityDirectionOptions_" + asset.asset, "liquidityDirectionOptions");
+                await createLDVote(asset.asset, optionsLd, currentBlock + blockDiff, chainId);
+            }
         } catch (error) {
             console.log(error);
         }
@@ -416,7 +419,7 @@ Vote now at https://vote.alluo.com/
 
 #ALLUO #liquiditydirection #governance`;
 
-    await tweet([tweetText]);
+    // await tweet([tweetText]);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
