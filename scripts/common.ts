@@ -7,9 +7,12 @@ import { calculateReturns } from "./grabConvexAPY";
 import { calculateBoosterFunds, calculateTotalBalances, calculateUserFunds } from "./getTotalBalances";
 import { getBufferAmountsPolygon, getTotalLiquidityDirectionValue } from "./getLiquidityDirectionValues";
 import https from "https";
-
+import {
+    getOptimisedFarmInterest
+} from "./getOmnivaultAPY";
 export const voteExecutorMasterAddress = "0x82e568C482dF2C833dab0D38DeB9fb01777A9e89";
 export const voteExecutorMasterAddressMainnet = "0x82e568C482dF2C833dab0D38DeB9fb01777A9e89";
+export const voteExecutorUtilsAddress = "0xDD9FC096606Ca0a3D8Be9178959f492c9C23966F"
 
 export type Times = {
     currentTime: Date,
@@ -184,6 +187,13 @@ async function getAPY(voteOption: string, llamaAPICode: string): Promise<string>
     if (llamaAPICode.split("-")[0] == "HISTORICAL") {
         let final2WeekAPR = await getHistoricalAPY(voteOption, llamaAPICode)
         return formatVoteOption(final2WeekAPR.toString(), voteOption);
+    }
+
+    if (llamaAPICode.split("-")[0] == "YEARN" || llamaAPICode.split("-")[0] == "BEEFY") {
+        let apy = await getOptimisedFarmInterest(llamaAPICode.split("-")[1], llamaAPICode.split("-")[0]);
+        console.log(apy, "apy")
+        console.log(voteOption, "vote option")
+        return formatVoteOption(apy.toString(), voteOption);
     }
 
     else if (llamaAPICode.length > 36) {
