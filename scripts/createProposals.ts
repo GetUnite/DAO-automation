@@ -27,12 +27,12 @@ function numberWithCommas(x: string) {
 }
 
 async function createTreasuryVote(
-    times: Times,
     treasuryValue: number[],
     options: string[],
     blockSnapshot: number,
     chainId: number,
 ) {
+    const times = getTimes();
     const title = `Percentage of treasury invested:  ${UTCStringToRemiString(times.voteEndTime.toUTCString())} to ${UTCStringToRemiString(times.apyEndTime.toUTCString())}`;
     let body = `What should be the percentage of the treasury invested in the protocol? 
 
@@ -97,12 +97,12 @@ Parameters for contract:
 }
 
 async function createMintVote(
-    times: Times,
     options: string[],
     blockSnapshot: number,
     chainId: number,
     provider: eth.providers.BaseProvider
 ) {
+    const times = getTimes();
     const title = `How many $ALLUO tokens should be used to reward Lockers for ${UTCStringToRemiString(times.voteEndTime.toUTCString())} to ${UTCStringToRemiString(times.apyEndTime.toUTCString())}`
     let body = `Lockers of $ALLUO tokens indicate that they are willing to participate in the governance of the protocol. For this participation, they are rewarded $ALLUO as a reward.
 
@@ -188,12 +188,12 @@ Parameters for contract:
 }
 
 async function createLDVote(
-    times: Times,
     asset: string,
     options: string[],
     blockSnapshot: number,
     chainId: number,
 ) {
+    const times = getTimes();
     const title = `[${asset}] Liquidity Direction: ${UTCStringToRemiString(times.voteEndTime.toUTCString())} to ${UTCStringToRemiString(times.apyEndTime.toUTCString())}`;
     let body = `Liquidity direction for all assets in the ${asset} farm with Alluo.
 
@@ -252,7 +252,6 @@ Parameters for contract:
 }
 
 async function createAPYVote(
-    times: Times,
     asset: string,
     ibAlluoSymbol: string,
     options: number[],
@@ -260,6 +259,7 @@ async function createAPYVote(
     chainId: number,
     provider: eth.providers.BaseProvider
 ) {
+    const times = getTimes();
     const title = `Advertised APY for the ${asset} pool: ${UTCStringToRemiString(times.voteEndTime.toUTCString())} to ${UTCStringToRemiString(times.apyEndTime.toUTCString())}`;
     let body = `What should be the advertised APY for the ${asset} pool?
 
@@ -362,9 +362,7 @@ async function main() {
 
     const voteStartHour = Number.parseInt(process.env.APY_VOTE_START_HOUR as string);
     const voteLengthSeconds = Number.parseInt(process.env.APY_VOTE_LENGTH_MSECONDS as string);
-    const voteEffectLengthSeconds = Number.parseInt(process.env.APY_VOTE_EFFECT_LENGTH_MSECONDS as string);
 
-    const times = getTimes(voteStartHour, voteLengthSeconds, voteEffectLengthSeconds, test);
     const blockDiff = 0;
 
     let currentBlock = await getCurrentBlock(mainnetProvider);
@@ -374,16 +372,16 @@ async function main() {
     const assets = await getIbAlluosAssets();
 
     try {
-        const optionsTreasury = await getVoteOptions(times.voteStartTime, "treasuryPercentageOptions", "treasuryPercentageOptions");
-        await createTreasuryVote(times, optionsTreasury[1], optionsTreasury[0], currentBlock + blockDiff, chainId);
+        const optionsTreasury = await getVoteOptions("treasuryPercentageOptions", "treasuryPercentageOptions");
+        await createTreasuryVote(optionsTreasury[1], optionsTreasury[0], currentBlock + blockDiff, chainId);
 
     } catch (error) {
         console.log(error);
     }
 
     try {
-        const optionsMint = await getVoteOptions(times.voteStartTime, "mintProposalOptions", "mintProposalOptions");
-        await createMintVote(times, optionsMint, currentBlock + blockDiff, chainId, mainnetProvider);
+        const optionsMint = await getVoteOptions("mintProposalOptions", "mintProposalOptions");
+        await createMintVote(optionsMint, currentBlock + blockDiff, chainId, mainnetProvider);
 
     } catch (error) {
         console.log(error);
@@ -393,16 +391,16 @@ async function main() {
         const asset = assets[i];
 
         try {
-            const optionsApy = await getVoteOptions(times.voteStartTime, "apyProposalOptions_" + asset.asset, "apyProposalOptions");
+            const optionsApy = await getVoteOptions("apyProposalOptions_" + asset.asset, "apyProposalOptions");
 
-            await createAPYVote(times, asset.asset, asset.symbol, optionsApy, currentBlock + blockDiff, chainId, mainnetProvider);
+            await createAPYVote(asset.asset, asset.symbol, optionsApy, currentBlock + blockDiff, chainId, mainnetProvider);
         } catch (error) {
             console.log(error);
         }
 
         try {
-            const optionsLd = await getVoteOptions(times.voteStartTime, "liquidityDirectionOptions_" + asset.asset, "liquidityDirectionOptions");
-            await createLDVote(times, asset.asset, optionsLd, currentBlock + blockDiff, chainId);
+            const optionsLd = await getVoteOptions("liquidityDirectionOptions_" + asset.asset, "liquidityDirectionOptions");
+            await createLDVote(asset.asset, optionsLd, currentBlock + blockDiff, chainId);
         } catch (error) {
             console.log(error);
         }
@@ -410,13 +408,13 @@ async function main() {
 
     const tweetText = `🔥Attention $ALLUO token holders!🔥
 
-    It's time to make your voice heard!🗣️
+It's time to make your voice heard!🗣️
 
-    Vote where to invest deposits and reap the rewards from the difference in realised APY and what is paid to depositors!💰
+Vote where to invest deposits and reap the rewards from the difference in realised APY and what is paid to depositors!💰
 
-    Vote now at https://vote.alluo.com/
+Vote now at https://vote.alluo.com/
 
-    #ALLUO #liquiditydirection #governance`;
+#ALLUO #liquiditydirection #governance`;
 
     await tweet([tweetText]);
 }

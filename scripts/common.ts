@@ -104,7 +104,9 @@ export async function getIbAlluosAssets(): Promise<{ asset: string, symbol: stri
     return assets;
 }
 
-export async function getVoteOptions(voteDate: Date, optionsType: string, folder: string): Promise<any[]> {
+export async function getVoteOptions(optionsType: string, folder: string): Promise<any[]> {
+    const times = getTimes();
+    const voteDate = times.voteStartTime;
     const regexFileString = `^\\d{2}-[A-Z][a-z]{2}-\\d{4}_${optionsType}\\.json$`
     const regexSpaces = /\d{2}\s[A-Z][a-z]{2}\s\d{4}/gm;
     const regexFile = new RegExp(regexFileString, "gm");
@@ -238,7 +240,9 @@ async function getHistoricalAPY(voteOption: string, llamaAPICode: string): Promi
     return (await calculateReturns(14, convexPool1, curvePool1, index1, curvePool2, index2))[0]
 }
 
-export function getTimes(voteStartHour: number, voteLengthSeconds: number, voteEffectLengthSeconds: number, test: boolean): Times {
+export function getTimes(): Times {
+    const voteEffectLengthSeconds = Number.parseInt(process.env.APY_VOTE_EFFECT_LENGTH_MSECONDS as string);
+
     let voteStartTime = new Date(Date.now());
     // // search for next Sunday
     let voteEndTime = new Date(Date.now());
