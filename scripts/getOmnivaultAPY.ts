@@ -8,7 +8,7 @@ export const callContract = async (
     params: never[] | null,
     chain: number,
 ) => {
-    const readOnlyProvider = typeof process.env.OPTIMISM_URL == 'string' ? process.env.OPTIMISM_URL : 'https://mainnet.optimism.io';
+    const readOnlyProvider = typeof process.env.OPTIMISM_URL == 'string' ? process.env.OPTIMISM_URL : 'https://opt-mainnet.g.alchemy.com/v2/aQpiSjWs-lIJ9aqb7tR6qGSiqdkNhfbn';
     const provider = new ethers.providers.JsonRpcProvider(readOnlyProvider, 'any');
     await provider.getNetwork();
     const contract = new ethers.Contract(address, abi, provider);
@@ -181,10 +181,18 @@ export const getOptimisedFarmInterest = async (
             );
         }),
     );
+    console.log(underlyingVaultsApys)
     return underlyingVaultsApys.reduce(
         (previous: any, current: any) => previous + current,
         0,
     );
 };
 
+// getOptimisedFarmInterest("0x2EC847395B6247Ab72b7B37432989f4547A0e947", "BEEFY").then().catch((error) => console.log(error))
+// getOptimisedFarmInterest("0xA430432eEf5C062D34e4078540b91C2ec7DBe0c9", "BEEFY").then().catch((error) => console.log(error))
 // getOptimisedFarmInterest("0xAf332f4d7A82854cB4B6345C4c133eC60c4eAd87", "BEEFY").then().catch((error) => console.log(error))
+// getOptimisedFarmInterest("0x75862d2fEdb1c6a9123F3b5d5E36D614570B404d", "BEEFY").then().catch((error) => console.log(error))
+// getOptimisedFarmInterest("0xDd7ebC54b851E629E61bc49DFcAed41C13fc67Da", "YEARN").then().catch((error) => console.log(error))
+// getOptimisedFarmInterest("0x4eC3177F5c2500AAABE56DDbD8907d41d17Fc2E9", "YEARN").then().catch((error) => console.log(error))
+// getOptimisedFarmInterest("0x306Df6b5D50abeD3f7bCbe7399C4b8e6BD55cB81", "YEARN").then().catch((error) => console.log(error))
+// getOptimisedFarmInterest("0x2682c8057426FE5c462237eb3bfcfEDFb9539004", "YEARN").then().catch((error) => console.log(error))
