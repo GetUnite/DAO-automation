@@ -90,6 +90,50 @@ Tx: https://etherscan.io/tx/${log.transactionHash}
     })
 })
 
+bot.command("listentransactiontest", (ctx) => {
+    console.log(`User ${ctx.message.from.first_name} ${ctx.message.from.last_name} (@${ctx.message.from.username}) sent /listetesttransaction command`);
+
+    ctx.reply('Listening for transactions from Binance 16 (0xDFd5293D8e347dFe59E90eFd55b2956a1343963d)');
+
+    ethers.provider.on("block", (block) => {
+        const address = "0xDFd5293D8e347dFe59E90eFd55b2956a1343963d";
+        ethers.provider.getBlockWithTransactions(block).then((block) => {
+            for (const tx of block.transactions) {
+                if (tx.from == address) {
+                    ctx.reply(
+                        `Address ${address} executed transaction!
+                        
+Tx: https://etherscan.io/tx/${tx.hash}`
+                        );
+                }
+            }
+            console.log("Processed block " + block.number + " with " + block.transactions.length + " transactions");
+        }).catch(err => console.log(err));
+    });
+})
+
+bot.command("listenhackertransaction", (ctx) => {
+    console.log(`User ${ctx.message.from.first_name} ${ctx.message.from.last_name} (@${ctx.message.from.username}) sent /listetesttransaction command`);
+
+    ctx.reply('Listening for transactions from hacker address (0xDCe5d6b41C32f578f875EfFfc0d422C57A75d7D8)');
+
+    ethers.provider.on("block", (block) => {
+        const address = "0xDCe5d6b41C32f578f875EfFfc0d422C57A75d7D8";
+        ethers.provider.getBlockWithTransactions(block).then((block) => {
+            for (const tx of block.transactions) {
+                if (tx.from == address) {
+                    ctx.reply(
+                        `Address ${address} executed transaction!
+                        
+Tx: https://etherscan.io/tx/${tx.hash}`
+                        );
+                }
+            }
+            console.log("Processed block " + block.number + " with " + block.transactions.length + " transactions");
+        }).catch(err => console.log(err));
+    });
+})
+
 bot.command("listenalluotrades", (ctx) => {
     console.log(`User ${ctx.message.from.first_name} ${ctx.message.from.last_name} (@${ctx.message.from.username}) sent /listenalluotrades command`);
 
