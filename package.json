@@ -49,6 +49,8 @@
   },
   "dependencies": {
     "@snapshot-labs/snapshot.js": "^0.3.97",
+    "axios": "^1.4.0",
+    "dayjs": "^1.11.9",
     "telegraf": "^4.10.0"
   }
 }
