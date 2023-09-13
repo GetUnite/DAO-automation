@@ -30,7 +30,7 @@ export async function processLDProposal(proposal: Proposal, params: VoteParams) 
     const optimismUrl = new ethers.providers.JsonRpcProvider(settings.optimismUrl);
 
     const veUtils = (await ethers.getContractAt("IVoteExecutorMasterUtils", settings.voteExecutorUtilsAddress)).connect(optimismUrl);
-    const strategyHandler = (await ethers.getContractAt("IStrategyHandler", settings.strategyHandlerAddress)).connect(optimismUrl);
+    const strategyHandler = (await ethers.getContractAt("IAlluoStrategyHandler", settings.strategyHandlerAddress)).connect(optimismUrl);
 
     const numberOfAssets = await strategyHandler.callStatic.numberOfAssets();
     let activeNumStrategies: Number[] = [];
@@ -79,6 +79,7 @@ export async function processLDProposal(proposal: Proposal, params: VoteParams) 
 export async function processAPYProposal(proposal: Proposal, params: VoteParams): Promise<winningParam[]> {
     const winningOption = await getWinningVoteOption(proposal);
     const winningParam = params!.args.find((x) => x.stringOption == winningOption)!;
+
     if (!(winningParam.stringOption == '0 $ALLUO - 0% APR')) {
         return [winningParam];
     }

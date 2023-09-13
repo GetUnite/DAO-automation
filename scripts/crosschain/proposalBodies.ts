@@ -51,11 +51,13 @@ async function getIbAlluoApyCommand(asset: string, option: number) {
     const voteExecutor = (await ethers.getContractAt("IVoteExecutorMasterUtils", "0xDD9FC096606Ca0a3D8Be9178959f492c9C23966F")).connect(polygonProvider);
 
     const cmd = await voteExecutor.encodeApyCommand(
-        `ibAlluo${asset}`,
+        `IbAlluo${asset}`,
         getAnnualInterestParam(option),
         getInterestPerSecondParam(option),
     );
-
+    // console.log("Asset nanme", `IbAlluo${asset}`)
+    // console.log("AnnualInterest", getAnnualInterestParam(option))
+    // console.log("InterestPerSecond", getInterestPerSecondParam(option))
     return cmd[1];
 }
 

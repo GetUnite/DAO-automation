@@ -19,29 +19,29 @@ export function getVoteEndTimestamp(fromTimestamp?: number) {
     dayjs.extend(utc);
 
     // Uncomment for overrides
-    return 1691424900;
+    // return 1691424900;
 
-    // let timestampNow = dayjs.utc();
-    // if (fromTimestamp) {
-    //     timestampNow = dayjs.utc(fromTimestamp * 1000);
-    // }
+    let timestampNow = dayjs.utc();
+    if (fromTimestamp) {
+        timestampNow = dayjs.utc(fromTimestamp * 1000);
+    }
 
-    // // 12:00 UTC
-    // let voteTime = timestampNow.hour(12).minute(0).second(0);
+    // 12:00 UTC
+    let voteTime = timestampNow.hour(12).minute(0).second(0);
 
-    // // loop while voteTime is not Sunday
-    // while (voteTime.day() != 0 || !(timestampNow.isBefore(voteTime))) {
-    //     voteTime = voteTime.add(1, "day");
-    // }
+    // loop while voteTime is not Sunday
+    while (voteTime.day() != 0 || !(timestampNow.isBefore(voteTime))) {
+        voteTime = voteTime.add(1, "day");
+    }
 
-    // return voteTime.unix();
+    return voteTime.unix();
 }
 
 export function getFinishedVoteEndTimestamp(fromTimestamp?: number) {
     dayjs.extend(utc);
 
-    // Uncomment for overrides
-    return 1691424900;
+    // // Uncomment for overrides
+    // return 1691424900;
 
     let timestampNow = dayjs.utc();
     if (fromTimestamp) {
@@ -61,8 +61,8 @@ export function getFinishedVoteEndTimestamp(fromTimestamp?: number) {
 
 // This function returns the timestamp of the time when vote effect starts
 export function getEffectStartTimestamp(fromTimestamp?: number) {
-    // Uncomment for overrides
-    return 1691323200;
+    // // Uncomment for overrides
+    // return 1691323200;
 
     // Assume that the effect starts right after the vote ends
     return getVoteEndTimestamp(fromTimestamp);
@@ -70,8 +70,8 @@ export function getEffectStartTimestamp(fromTimestamp?: number) {
 
 // This function returns the timestamp of the time when vote effect ends
 export function getEffectEndTimestamp(fromTimestamp?: number) {
-    // Uncomment for overrides
-    return 1692532800;
+    // // Uncomment for overrides
+    // return 1692532800;
 
     // Effect ends in 14 days since the vote ends
     const voteEndTimestamp = getVoteEndTimestamp(fromTimestamp);

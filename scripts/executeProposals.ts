@@ -257,7 +257,7 @@ async function getLiquidityDirectionData(proposal: Proposal, params: VoteParams)
     const veMaster = new Contract(voteExecutorMasterAddressMainnet, veMasterInterface.interface, signer);
 
     const strategyHandlerAddress = "0x385AB598E7DBF09951ba097741d2Fa573bDe94A5"
-    const strategyHandlerContract = await ethers.getContractAt("IStrategyHandler", strategyHandlerAddress);
+    const strategyHandlerContract = await ethers.getContractAt("IAlluoStrategyHandler", strategyHandlerAddress);
     const strategyHandler = new Contract(strategyHandlerAddress, strategyHandlerContract.interface, signer);
     const activeStrategies = await strategyHandler.callStatic.getAllAssetActiveIds();
     let activeNumStrategies: Number[] = []

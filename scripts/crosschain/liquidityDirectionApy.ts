@@ -11,6 +11,9 @@ export async function getAPY(voteOption: string, llamaAPICode: string): Promise<
         // return formatVoteOption(final2WeekAPR.toString(), voteOption);
     }
 
+    if (llamaAPICode.split("-")[0] == "DONOTHING") {
+        return formatVoteOption("0", voteOption)
+    }
     if (llamaAPICode.split("-")[0] == "YEARN" || llamaAPICode.split("-")[0] == "BEEFY") {
         let apy = await getOptimisedFarmInterest(llamaAPICode.split("-")[1], llamaAPICode.split("-")[0]);
         // console.log(apy, "apy")
