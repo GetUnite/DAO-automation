@@ -27,7 +27,7 @@ async function main() {
         switch (params.type) {
             case "Liquidity Direction Vote":
                 console.log("Processing Liquidity Direction Vote proposal");
-                winningParams.push(...await processLDProposal(proposal, params));
+                // winningParams.push(...await processLDProposal(proposal, params));
                 break;
 
             case "apyProposal":
@@ -37,7 +37,7 @@ async function main() {
 
             case "Treasury Vote":
                 console.log("Processing Treasury Vote proposal");
-                winningParams.push(...await processTreasuryProposal(proposal, params));
+                // winningParams.push(...await processTreasuryProposal(proposal, params));
                 break;
 
             default:
@@ -61,13 +61,13 @@ async function main() {
 
         console.log("Message hash:", cmdEncoded.messagesHash);
         console.log("Trying to broadcast tx...");
-        // const tx = await veMaster.connect(signer).submitData(cmdEncoded.inputData, {gasLimit: 2000000});
+        const tx = await veMaster.connect(signer).submitData(cmdEncoded.inputData, { gasLimit: 2000000 });
 
-        // console.log("Tx is broadcasted on chainId", (await ethers.provider.getNetwork()).chainId, "txHash:", tx.hash);
-        // console.log("Waiting for tx confirmation...");
+        console.log("Tx is broadcasted on chainId", (await ethers.provider.getNetwork()).chainId, "txHash:", tx.hash);
+        console.log("Waiting for tx confirmation...");
 
-        // await tx.wait();
-        // console.log("Tx is confirmed");
+        await tx.wait();
+        console.log("Tx is confirmed");
     }
 }
 

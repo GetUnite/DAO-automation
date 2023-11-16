@@ -402,7 +402,7 @@ async function main() {
 
             if (asset.asset == "ETH" || asset.asset == "USD") {
                 const optionsLd = await getVoteOptions("liquidityDirectionOptions_" + asset.asset, "liquidityDirectionOptions");
-                await createLDVote(asset.asset, optionsLd, currentBlock + blockDiff, chainId);
+                // await createLDVote(asset.asset, optionsLd, currentBlock + blockDiff, chainId);
             }
         } catch (error) {
             console.log(error);

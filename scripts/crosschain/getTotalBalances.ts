@@ -30,6 +30,7 @@ export async function calculateTotalBalances(): Promise<number> {
 
 export async function calculateUserFunds(): Promise<number> {
     const polygonProvider = new ethers.providers.JsonRpcProvider(settings.polygonUrl);
+    await reset()
     await ibAlluoInfoPromise;
     let iballuoAddresses = ibAlluosInfo.map((iballuoInfo) => iballuoInfo.ibAlluoAddress);
     let finalValue = 0;
@@ -38,10 +39,9 @@ export async function calculateUserFunds(): Promise<number> {
     for (let iballuoAddress of iballuoAddresses) {
         const action = async () => {
             let iballuo = (await ethers.getContractAt("IIbAlluo", iballuoAddress)).connect(polygonProvider);
-
             // Parralel requests
-            let totalValueLocked = iballuo.totalAssetSupply();
-            let gnosisBalance = iballuo.balanceOf("0x2580f9954529853ca5ac5543ce39e9b5b1145135");
+            let totalValueLocked = await iballuo.totalAssetSupply();
+            let gnosisBalance = await iballuo.balanceOf("0x2580f9954529853ca5ac5543ce39e9b5b1145135");
             let superToken = await iballuo.superToken();
             let streamableTokenPromise = ethers.getContractAt("IStIbAlluo", superToken);
             let primaryTokensPromise = iballuo.getListSupportedTokens();
@@ -52,23 +52,29 @@ export async function calculateUserFunds(): Promise<number> {
 
             const streamableToken = (await streamableTokenPromise).connect(polygonProvider);
             let gnosisBalanceStreamable = await streamableToken.realtimeBalanceOfNow("0x2580f9954529853ca5ac5543ce39e9b5b1145135");
-            let valueHeldByGnosis = iballuo.convertToAssetValue(await gnosisBalance);
+            let valueHeldByGnosis = await iballuo.convertToAssetValue(gnosisBalance);
 
             let gnosisValueStreamable = await iballuo.convertToAssetValue(gnosisBalanceStreamable.availableBalance);
-
-            let totalAssetCustomerFunds = Number(await totalValueLocked) - Number(await valueHeldByGnosis) - Number(gnosisValueStreamable);
+            let stiballuoDoubleCount = await iballuo.convertToAssetValue(await iballuo.balanceOf(streamableToken.address))
+            let totalIbAlluoCustomerFunds = Number(totalValueLocked) - Number(valueHeldByGnosis) - Number(stiballuoDoubleCount)
+            console.log("total iballuo customer funds", (totalIbAlluoCustomerFunds))
+            let stiballuoTVL = await streamableToken.totalSupply();
+            let totalStIbAlluoCustomerFunds = Number(await iballuo.convertToAssetValue(stiballuoTVL)) - Number(gnosisValueStreamable);
+            console.log("total stiballuo customer funds", (totalStIbAlluoCustomerFunds));
+            let totalAssetCustomerFunds = totalIbAlluoCustomerFunds + totalStIbAlluoCustomerFunds;
             console.log("IbAlluo:", await ibAlluoNamePromise, "Total asset customer funds:", totalAssetCustomerFunds / (10 ** 18));
             finalValue += primaryTokenPrice * totalAssetCustomerFunds / (10 ** 18);
         };
         actions.push(action());
     }
-
     await Promise.all(actions);
     return finalValue;
 }
 
 export async function calculateBoosterFunds(address: string): Promise<number> {
     // Because the calculations involve exchange contract, we need to use forked hardhat network
+    // Now boosted funds are empty.
+    return 0;
     await reset(settings.mainnetUrl)
     let boostersToCheck = ["0x1EE566Fd6918101C578a1d2365d632ED39BEd740", "0xcB9e36cD1A0eD9c98Db76d1619e649A7a032F271"]
     let finalValue = 0;

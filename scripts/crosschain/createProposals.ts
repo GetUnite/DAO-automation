@@ -41,7 +41,7 @@ async function main() {
     const { treasuryInvested, treasuryValue } = await getTreasuryValues();
 
     const treasuryBody = getTreasuryInvestedProposalBody(treasuryInvested, treasuryValue, treasuryOptions);
-
+    // console.log(treasuryBody)
     await createProposal(treasuryTopic, treasuryBody, treasuryOptions, signer);
 
 
@@ -62,7 +62,7 @@ async function main() {
         const topic = getLiquidityDirectionProposalTopic(info.asset);
         const options = await getLiquidityDirectionProposalOptions(info.asset);
         const body = getLiquidityDirectionProposalBody(info.asset, options);
-
+        // console.log(options)
         await createProposal(topic, body, options, signer);
     }
 }

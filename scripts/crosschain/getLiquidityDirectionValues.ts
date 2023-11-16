@@ -9,7 +9,8 @@ import { BigNumber } from "ethers";
 export async function getTotalLiquidityDirectionValue(): Promise<number> {
     const mainnetProvider = new ethers.providers.JsonRpcProvider(settings.mainnetUrl);
     let strategyHandler = (await ethers.getContractAt("IStrategyHandler", "0x385AB598E7DBF09951ba097741d2Fa573bDe94A5")).connect(mainnetProvider);
-    let currentDeployed = await strategyHandler.getCurrentDeployed();
+    // let currentDeployed = await strategyHandler.getCurrentDeployed();
+    let currentDeployed = [0, "125000000000000000000000", 0, 0];
     let totalValue = 0;
     let actions = [];
 

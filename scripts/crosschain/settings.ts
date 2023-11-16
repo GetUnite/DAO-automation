@@ -43,8 +43,8 @@ export const settings: Settings = {
     optimismUrl: process.env.OPTIMISM_URL as string,
     testnetUrl: process.env.TESTNET_URL,
     mnemonic: process.env.MNEMONIC as string,
-    treasuryInvestedOverride: 414561.89,
-    treasuryValueOverride: 596241.96,
+    treasuryInvestedOverride: 316059.55,
+    treasuryValueOverride: 418039.10,
     voteExecutorUtilsAddress: "0xDD9FC096606Ca0a3D8Be9178959f492c9C23966F",
     voteExecutorMasterAddress: "0x3DC877A5a211a082E7c2D64aa816dd079b50AddB",
     strategyHandlerAddress: "0xca3708D709f1324D21ad2C0fb551CC4a0882FD29"

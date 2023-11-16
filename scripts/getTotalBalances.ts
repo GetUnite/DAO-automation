@@ -35,8 +35,8 @@ export async function calculateTotalBalances(accounts: string[]): Promise<number
     return mainnetTotalBalanceInUSD + executorbalancesMainnet + uniswapPositionGnosis + polygonTotalBalanceInUSD
 }
 
-export async function calculateUserFunds(): Promise<number> {
-    await reset(process.env.POLYGON_URL)
+export async function calculateUserFunds(blockNumber: number = 0): Promise<number> {
+    await reset(process.env.POLYGON_URL, blockNumber)
 
     let liquidityHandler = await ethers.getContractAt("ILiquidityHandler", "0x31a3439Ac7E6Ea7e0C0E4b846F45700c6354f8c1")
     let iballuoAddresses = await liquidityHandler.getListOfIbAlluos();
@@ -54,6 +54,8 @@ export async function calculateUserFunds(): Promise<number> {
         let superToken = await iballuo.superToken();
 
         let streamableToken = await ethers.getContractAt("IStIbAlluo", superToken);
+        console.log("blacknumber", blockNumber)
+        console.log("Streamable token balance", ethers.utils.formatEther(await iballuo.balanceOf(streamableToken.address)));
         let gnosisBalanceStreamable = await streamableToken.realtimeBalanceOfNow("0x2580f9954529853ca5ac5543ce39e9b5b1145135");
         let gnosisValueStreamable = await iballuo.convertToAssetValue(gnosisBalanceStreamable.availableBalance);
 
@@ -207,3 +209,14 @@ const calcAmount1 = (
     const adjustedMath = math > 0 ? math : 0
     return adjustedMath
 }
+
+async function main() {
+    console.log("Before", await calculateUserFunds(47485395))
+
+    console.log("After", await calculateUserFunds(48040294))
+}
+
+main().catch((err) => {
+    console.error(err);
+    process.exit(1);
+});

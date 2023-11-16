@@ -165,6 +165,7 @@ export async function getVoteOptions(optionsType: string, folder: string): Promi
         console.log("Inflated estimate of treasury value before deductions", treasuryValueToday);
 
         // Subtract all user funds
+        console.log('gotinhere')
         let totalCustomerFunds = await calculateUserFunds()
         console.log("Total customer funds", totalCustomerFunds);
 

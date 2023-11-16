@@ -79,7 +79,10 @@ export async function processLDProposal(proposal: Proposal, params: VoteParams) 
 export async function processAPYProposal(proposal: Proposal, params: VoteParams): Promise<winningParam[]> {
     const winningOption = await getWinningVoteOption(proposal);
     const winningParam = params!.args.find((x) => x.stringOption == winningOption)!;
-
+    if (proposal.title.includes("EUR")) {
+        // EUR doesn't exist on optimism yet
+        return [];
+    }
     if (!(winningParam.stringOption == '0 $ALLUO - 0% APR')) {
         return [winningParam];
     }
